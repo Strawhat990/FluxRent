@@ -533,7 +533,7 @@ export default function Home() {
       <div className="how-num">03</div>
       <div className="how-icon">💸</div>
       <div className="how-title">Get Paid</div>
-      <div className="how-desc">Earnings hit your account within 24 hours of successful handover. Rentify takes just 12% commission — no hidden charges, no delays, ever.</div>
+      <div className="how-desc">Earnings hit your account within 24 hours of successful handover. FluxRent takes just 12% commission — no hidden charges, no delays, ever.</div>
     </div>
   </div>
 </section>
@@ -573,7 +573,7 @@ export default function Home() {
     <div>
       <div className="section-tag">For Owners</div>
       <h2>Turn idle items into <em>income</em></h2>
-      <p>That camera sitting in your drawer, the car you use thrice a month, the lehenga worn once — list them on Rentify and earn every time someone needs them.</p>
+      <p>That camera sitting in your drawer, the car you use thrice a month, the lehenga worn once — list them on FluxRent and earn every time someone needs them.</p>
       <button className="btn-big" style={{"fontSize":".95rem","padding":"16px 36px"}}>Start Listing Free →</button>
     </div>
 
@@ -603,7 +603,7 @@ export default function Home() {
         <div className="ls-num">4</div>
         <div className="ls-text">
           <h4>Earn in 24 Hours</h4>
-          <p>Money lands in your bank within 24 hours of return. Rentify's ₹50K damage cover protects your items.</p>
+          <p>Money lands in your bank within 24 hours of return. FluxRent's ₹50K damage cover protects your items.</p>
         </div>
       </div>
     </div>
@@ -613,7 +613,7 @@ export default function Home() {
 {/**/}
 <section className="reviews-section">
   <div className="section-tag">Testimonials</div>
-  <div className="section-title reveal" style={{"marginBottom":"0"}}>People love Rentify.</div>
+  <div className="section-title reveal" style={{"marginBottom":"0"}}>People love FluxRent.</div>
 
   <div className="reviews-row">
     <div className="reviews-col" style={{"flex":"1"}}>
@@ -627,7 +627,7 @@ export default function Home() {
       </div>
       <div className="review-card" style={{"transitionDelay":".15s"}}>
         <div className="review-stars">★★★★★</div>
-        <div className="review-text">"Listed my car on Rentify 3 months ago. I'm making ₹18,000 extra per month just from weekend rentals. The verification process made me feel completely safe."</div>
+        <div className="review-text">"Listed my car on FluxRent 3 months ago. I'm making ₹18,000 extra per month just from weekend rentals. The verification process made me feel completely safe."</div>
         <div className="review-user">
           <div className="review-ava" style={{"background":"#7C3AED"}}>V</div>
           <div><div className="review-name">Vikram Patel</div><div className="review-loc">📍 Indiranagar · Car Owner</div></div>
@@ -637,7 +637,7 @@ export default function Home() {
     <div className="reviews-col" style={{"flex":"1"}}>
       <div className="review-card" style={{"transitionDelay":".1s"}}>
         <div className="review-stars">★★★★★</div>
-        <div className="review-text">"Booked a lehenga for my cousin's sangeet. Perfect fit, beautiful condition. Pickup was easy and the owner was so sweet. Will use Rentify again for every event!"</div>
+        <div className="review-text">"Booked a lehenga for my cousin's sangeet. Perfect fit, beautiful condition. Pickup was easy and the owner was so sweet. Will use FluxRent again for every event!"</div>
         <div className="review-user">
           <div className="review-ava" style={{"background":"#FF1F8E"}}>S</div>
           <div><div className="review-name">Shreya Nambiar</div><div className="review-loc">📍 HSR Layout · Fashion Renter</div></div>
@@ -655,7 +655,7 @@ export default function Home() {
     <div className="reviews-col" style={{"flex":"1"}}>
       <div className="review-card" style={{"transitionDelay":".2s"}}>
         <div className="review-stars">★★★★★</div>
-        <div className="review-text">"The damage protection gives me so much peace of mind. I have ₹2 lakh worth of equipment listed. Rentify's coverage means I don't worry at all. Highly recommend."</div>
+        <div className="review-text">"The damage protection gives me so much peace of mind. I have ₹2 lakh worth of equipment listed. FluxRent's coverage means I don't worry at all. Highly recommend."</div>
         <div className="review-user">
           <div className="review-ava" style={{"background":"#0284C7"}}>M</div>
           <div><div className="review-name">Mohammed Farouk</div><div className="review-loc">📍 MG Road · Gadget Owner</div></div>
@@ -663,7 +663,7 @@ export default function Home() {
       </div>
       <div className="review-card" style={{"transitionDelay":".35s"}}>
         <div className="review-stars">★★★★★</div>
-        <div className="review-text">"Used Rentify to get a PS5 for a 3-day trip. The owner was responsive and the whole booking took 2 minutes. So much better than buying something I'd use once."</div>
+        <div className="review-text">"Used FluxRent to get a PS5 for a 3-day trip. The owner was responsive and the whole booking took 2 minutes. So much better than buying something I'd use once."</div>
         <div className="review-user">
           <div className="review-ava" style={{"background":"#D97706"}}>D</div>
           <div><div className="review-name">Divesh Kumar</div><div className="review-loc">📍 Jayanagar · Gaming Renter</div></div>
@@ -708,7 +708,7 @@ export default function Home() {
     <div className="foot-col">
       <h4>Company</h4>
       <ul>
-        <li><a href="#">About Rentify</a></li>
+        <li><a href="#">About FluxRent</a></li>
         <li><a href="#">Blog</a></li>
         <li><a href="#">Careers</a></li>
         <li><a href="#">Press</a></li>
@@ -717,7 +717,7 @@ export default function Home() {
     </div>
   </div>
   <div className="foot-bottom">
-    <div>© 2025 Rentify Technologies · Made in India 🇮🇳</div>
+    <div>© 2025 FluxRent Technologies · Made in India 🇮🇳</div>
     <div style={{"display":"flex","gap":"24px"}}>
       <a href="#" style={{"color":"rgba(247,244,238,.35)","textDecoration":"none","fontSize":".8rem"}}>Privacy</a>
       <a href="#" style={{"color":"rgba(247,244,238,.35)","textDecoration":"none","fontSize":".8rem"}}>Terms</a>
