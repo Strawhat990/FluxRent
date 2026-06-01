@@ -84,7 +84,7 @@ export default function Home() {
 
 {/**/}
 <nav>
-  <div className="logo">Rent<em>ify</em></div>
+  <div className="logo">Flux<em>Rent</em></div>
   <ul className="nav-links">
     <li><a href="#browse">Browse</a></li>
     <li><a href="#how">How It Works</a></li>
@@ -677,7 +677,7 @@ export default function Home() {
 <footer>
   <div className="foot-grid">
     <div className="foot-brand">
-      <div className="logo" style={{"color":"var(--bg)"}}>Rent<em>ify</em></div>
+      <div className="logo" style={{"color":"var(--bg)"}}>Flux<em>Rent</em></div>
       <p>India's peer-to-peer rental marketplace. Rent anything from anyone around you — or earn from what you own.</p>
       <div style={{"display":"flex","gap":"10px","marginTop":"20px"}}>
         <div style={{"width":"36px","height":"36px","borderRadius":"8px","background":"rgba(247,244,238,.08)","display":"flex","alignItems":"center","justifyContent":"center","fontSize":".95rem","cursor":"none"}}>𝕏</div>
