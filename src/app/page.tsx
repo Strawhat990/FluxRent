@@ -3,16 +3,7 @@ import { useEffect } from "react";
 
 export default function Home() {
   useEffect(() => {
-    // Cursor
-    const cur = document.getElementById('cur');
-    const cur2 = document.getElementById('cur2');
-    const onMouseMove = (e: MouseEvent) => {
-      const mx = e.clientX;
-      const my = e.clientY;
-      if (cur) { cur.style.left = mx + 'px'; cur.style.top = my + 'px'; }
-      setTimeout(() => { if (cur2) { cur2.style.left = mx + 'px'; cur2.style.top = my + 'px'; } }, 90);
-    };
-    document.addEventListener('mousemove', onMouseMove);
+
 
     // Observer
     const obs = new IntersectionObserver(entries => {
@@ -65,7 +56,6 @@ export default function Home() {
     },200);
 
     return () => {
-      document.removeEventListener('mousemove', onMouseMove);
       obs.disconnect();
       statsObs.disconnect();
     }
@@ -76,8 +66,7 @@ export default function Home() {
       
 
 {/**/}
-<div id="cur"></div>
-<div id="cur2"></div>
+
 
 {/**/}
 <div className="float-btn">+ List an Item</div>
@@ -223,7 +212,7 @@ export default function Home() {
             <div className="featured-price">₹800 <span>/day</span></div>
             <div style={{"fontSize":".78rem","color":"rgba(247,244,238,.4)","marginTop":"2px"}}>₹4,500/week · ₹14,000/month</div>
           </div>
-          <button style={{"padding":"12px 28px","borderRadius":"12px","background":"var(--accent)","color":"#fff","fontFamily":"'Cabinet Grotesk',sans-serif","fontWeight":"700","border":"none","cursor":"none","fontSize":".95rem"}}>Rent Now</button>
+          <button style={{"padding":"12px 28px","borderRadius":"12px","background":"var(--accent)","color":"#fff","fontFamily":"'Cabinet Grotesk',sans-serif","fontWeight":"700","border":"none","fontSize":".95rem"}}>Rent Now</button>
         </div>
       </div>
     </div>
@@ -484,7 +473,7 @@ export default function Home() {
 
   {/**/}
   <div style={{"textAlign":"center","marginTop":"48px"}}>
-    <button style={{"padding":"16px 48px","borderRadius":"100px","border":"2px solid var(--border)","background":"transparent","fontFamily":"'Cabinet Grotesk',sans-serif","fontWeight":"700","fontSize":"1rem","cursor":"none","transition":"all .2s"}}  >Load More Listings</button>
+    <button style={{"padding":"16px 48px","borderRadius":"100px","border":"2px solid var(--border)","background":"transparent","fontFamily":"'Cabinet Grotesk',sans-serif","fontWeight":"700","fontSize":"1rem","transition":"all .2s"}}  >Load More Listings</button>
   </div>
 </section>
 
@@ -680,9 +669,9 @@ export default function Home() {
       <div className="logo" style={{"color":"var(--bg)"}}>Flux<em>Rent</em></div>
       <p>India's peer-to-peer rental marketplace. Rent anything from anyone around you — or earn from what you own.</p>
       <div style={{"display":"flex","gap":"10px","marginTop":"20px"}}>
-        <div style={{"width":"36px","height":"36px","borderRadius":"8px","background":"rgba(247,244,238,.08)","display":"flex","alignItems":"center","justifyContent":"center","fontSize":".95rem","cursor":"none"}}>𝕏</div>
-        <div style={{"width":"36px","height":"36px","borderRadius":"8px","background":"rgba(247,244,238,.08)","display":"flex","alignItems":"center","justifyContent":"center","fontSize":".95rem","cursor":"none"}}>in</div>
-        <div style={{"width":"36px","height":"36px","borderRadius":"8px","background":"rgba(247,244,238,.08)","display":"flex","alignItems":"center","justifyContent":"center","fontSize":".95rem","cursor":"none"}}>📸</div>
+        <div style={{"width":"36px","height":"36px","borderRadius":"8px","background":"rgba(247,244,238,.08)","display":"flex","alignItems":"center","justifyContent":"center","fontSize":".95rem"}}>𝕏</div>
+        <div style={{"width":"36px","height":"36px","borderRadius":"8px","background":"rgba(247,244,238,.08)","display":"flex","alignItems":"center","justifyContent":"center","fontSize":".95rem"}}>in</div>
+        <div style={{"width":"36px","height":"36px","borderRadius":"8px","background":"rgba(247,244,238,.08)","display":"flex","alignItems":"center","justifyContent":"center","fontSize":".95rem"}}>📸</div>
       </div>
     </div>
     <div className="foot-col">
