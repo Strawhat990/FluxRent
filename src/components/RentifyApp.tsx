@@ -890,10 +890,16 @@ function Header({
             <Plus size={16} />
             List item
           </button>
-          <button className="avatar-chip hidden md:flex" onClick={onDashboard}>
-            <span>{currentUser.avatar}</span>
-            <span className="hidden sm:block">{currentUser.name.split(" ")[0]}</span>
-          </button>
+          {isLoggedIn && (
+            <button className="avatar-chip hidden md:flex" onClick={onDashboard}>
+              {currentUser.avatar.startsWith("http") ? (
+                <img src={currentUser.avatar} alt="Avatar" className="w-6 h-6 rounded-full" />
+              ) : (
+                <span>{currentUser.avatar}</span>
+              )}
+              <span className="hidden sm:block">{currentUser.name.split(" ")[0]}</span>
+            </button>
+          )}
           <button className="icon-btn md:hidden" onClick={onMobileMenu} aria-label="Open menu">
             {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
