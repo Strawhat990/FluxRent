@@ -192,6 +192,29 @@ export async function fetchProfile(userId: string): Promise<UserProfile | null> 
   return toProfile(data);
 }
 
+export async function createProfile(profile: Partial<UserProfile> & { id: string, name: string, email: string }): Promise<void> {
+  const sb = getSupabaseBrowserClient();
+  if (!sb) return;
+  
+  const { error } = await sb.from("profiles").insert({
+    id: profile.id,
+    name: profile.name,
+    email: profile.email,
+    city: profile.city ?? "",
+    bio: profile.bio ?? "",
+    avatar: profile.avatar ?? `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.email}`,
+    rating: profile.rating ?? 0,
+    review_count: profile.reviewCount ?? 0,
+    verified: profile.verified ?? false,
+    role: profile.role ?? "user",
+    listed_items: profile.listedItems ?? 0,
+    rental_history: profile.rentalHistory ?? 0,
+    banned: profile.banned ?? false,
+  });
+
+  if (error) console.error("createProfile:", error);
+}
+
 export async function updateProfile(userId: string, updates: Partial<UserProfile>): Promise<void> {
   const sb = getSupabaseBrowserClient();
   if (!sb) return;

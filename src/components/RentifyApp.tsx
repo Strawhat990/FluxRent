@@ -61,6 +61,7 @@ import {
   fetchMyThreads,
   fetchNotifications,
   fetchProfile,
+  createProfile,
   getSupabaseBrowserClient,
   isSupabaseConfigured,
   removeFavorite,
@@ -210,7 +211,18 @@ export default function RentifyApp() {
     const { data: { subscription } } = sb.auth.onAuthStateChange(async (event, session) => {
       if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user) {
         const userId = session.user.id;
-        const profile = await fetchProfile(userId);
+        let profile = await fetchProfile(userId);
+        if (!profile) {
+          const newProfile = {
+            id: userId,
+            name: (session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || "New User") as string,
+            email: session.user.email || "",
+            avatar: (session.user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${session.user.email}`) as string,
+            role: "user" as any,
+          };
+          await createProfile(newProfile);
+          profile = await fetchProfile(userId);
+        }
         if (profile) { setCurrentUser(profile); setIsLoggedIn(true); }
         const [favs, myBookings, myThreads, myNotifs] = await Promise.all([
           fetchFavorites(userId),
