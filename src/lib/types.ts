@@ -29,6 +29,11 @@ export type Listing = {
   category: string;
   city: string;
   area: string;
+  address: string;
+  lat?: number;
+  lng?: number;
+  phone: string;
+  securityRemarks: string;
   pricePerDay: number;
   securityDeposit: number;
   delivery: "pickup" | "delivery" | "both";

@@ -71,7 +71,10 @@ function toListing(r: any): Listing {
   return {
     id: r.id, ownerId: r.owner_id, ownerName: r.owner_name, ownerAvatar: r.owner_avatar,
     ownerRating: Number(r.owner_rating), title: r.title, description: r.description,
-    category: r.category, city: r.city, area: r.area, pricePerDay: r.price_per_day,
+    category: r.category, city: r.city, area: r.area,
+    address: r.address ?? '', lat: r.lat ?? undefined, lng: r.lng ?? undefined,
+    phone: r.phone ?? '', securityRemarks: r.security_remarks ?? '',
+    pricePerDay: r.price_per_day,
     securityDeposit: r.security_deposit, delivery: r.delivery, availability: r.availability,
     availableFrom: r.available_from, availableTo: r.available_to, images: r.images ?? [],
     rating: Number(r.rating), reviewCount: r.review_count, badge: r.badge,
@@ -149,7 +152,10 @@ export async function createListing(listing: Omit<Listing, "id" | "createdAt">, 
     id, owner_id: listing.ownerId, owner_name: listing.ownerName,
     owner_avatar: listing.ownerAvatar, owner_rating: listing.ownerRating,
     title: listing.title, description: listing.description, category: listing.category,
-    city: listing.city, area: listing.area, price_per_day: listing.pricePerDay,
+    city: listing.city, area: listing.area,
+    address: listing.address ?? '', lat: listing.lat ?? null, lng: listing.lng ?? null,
+    phone: listing.phone ?? '', security_remarks: listing.securityRemarks ?? '',
+    price_per_day: listing.pricePerDay,
     security_deposit: listing.securityDeposit, delivery: listing.delivery,
     availability: listing.availability, available_from: listing.availableFrom,
     available_to: listing.availableTo, images, rating: listing.rating,
@@ -334,4 +340,39 @@ export async function addFavorite(userId: string, listingId: string): Promise<vo
 export async function removeFavorite(userId: string, listingId: string): Promise<void> {
   const sb = getSupabaseBrowserClient();
   if (sb) await sb.from("favorites").delete().eq("user_id", userId).eq("listing_id", listingId);
+}
+
+export async function triggerEmailNotification(params: {
+  type: "new_message" | "new_booking";
+  toEmail: string;
+  ownerName: string;
+  itemTitle: string;
+  senderName: string;
+  message: string;
+}) {
+  const sb = getSupabaseBrowserClient();
+  if (!sb) return;
+  await sb.functions.invoke("notify", {
+    body: {
+      type: params.type,
+      to: params.toEmail,
+      ownerName: params.ownerName,
+      itemTitle: params.itemTitle,
+      senderName: params.senderName,
+      message: params.message,
+    },
+  });
+}
+
+export async function fetchProfiles(): Promise<UserProfile[]> {
+  const sb = getSupabaseBrowserClient();
+  if (!sb) return [];
+  const { data, error } = await sb.from("profiles").select("*").order("name", { ascending: true });
+  if (error) { console.error("fetchProfiles:", error); return []; }
+  return (data ?? []).map(toProfile);
+}
+
+export async function updateProfileBannedStatus(userId: string, banned: boolean): Promise<void> {
+  const sb = getSupabaseBrowserClient();
+  if (sb) await sb.from("profiles").update({ banned }).eq("id", userId);
 }

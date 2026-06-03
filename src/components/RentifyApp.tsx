@@ -3,6 +3,7 @@
 import { AnimatePresence, motion, type Variants } from "framer-motion";
 import {
   Bell,
+  Menu,
   CalendarDays,
   Camera,
   Check,
@@ -18,8 +19,10 @@ import {
   MessageCircle,
   Moon,
   Package,
+  Phone,
   Plus,
   Search,
+  Shield,
   Send,
   Share2,
   ShieldCheck,
@@ -39,7 +42,7 @@ import {
   demoReviews,
   demoUsers,
 } from "@/lib/demo-data";
-import { cn, daysBetween, formatInr, uid } from "@/lib/utils";
+import { cn, daysBetween, formatInr, uid, getDistanceInKm } from "@/lib/utils";
 import {
   addFavorite,
   createBooking,
@@ -65,7 +68,21 @@ import {
   signUpWithEmail,
   updateBookingStatus as sbUpdateBookingStatus,
   updateProfile,
+  triggerEmailNotification,
+  fetchProfiles,
+  updateProfileBannedStatus,
 } from "@/lib/supabase";
+import ListingFormModal from "./ListingFormModal";
+import dynamic from "next/dynamic";
+
+const MapDisplay = dynamic(() => import("./MapDisplay"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-44 items-center justify-center rounded-2xl border border-dashed border-[var(--border)] bg-[var(--bg2)] text-sm text-[var(--muted)]">
+      Loading map…
+    </div>
+  ),
+});
 import type {
   Booking,
   BookingStatus,
@@ -127,6 +144,35 @@ export default function RentifyApp() {
   const [city, setCity] = useState("All");
   const [maxPrice, setMaxPrice] = useState(3000);
   const [availableOnly, setAvailableOnly] = useState(false);
+  const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [maxDistance, setMaxDistance] = useState<number | null>(null);
+  const [sortBy, setSortBy] = useState<"relevance" | "priceAsc" | "priceDesc" | "distance">("relevance");
+  const [locatingUser, setLocatingUser] = useState(false);
+
+  const requestUserLocation = () => {
+    if (typeof window === "undefined" || !navigator.geolocation) {
+      notify("Geolocation is not supported by your browser");
+      return;
+    }
+    setLocatingUser(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setUserCoords({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+        setLocatingUser(false);
+        notify("Location updated successfully!");
+        setSortBy("distance");
+      },
+      (error) => {
+        console.error("Geolocation error:", error);
+        setLocatingUser(false);
+        notify("Could not retrieve your location. Make sure GPS is enabled and location permission is granted.");
+      },
+      { enableHighAccuracy: true, timeout: 8000 }
+    );
+  };
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [bookingListing, setBookingListing] = useState<Listing | null>(null);
   const [chatListing, setChatListing] = useState<Listing | null>(null);
@@ -134,6 +180,7 @@ export default function RentifyApp() {
   const [authMode, setAuthMode] = useState<AuthMode | null>(null);
   const [dashboardTab, setDashboardTab] = useState<DashboardTab>("overview");
   const [toast, setToast] = useState<string | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
@@ -144,6 +191,12 @@ export default function RentifyApp() {
     if (!isSupabaseConfigured()) return;
     fetchListings().then((data) => { if (data.length > 0) setListings(data); });
   }, []);
+
+  // Fetch all profiles for admin view
+  useEffect(() => {
+    if (!isSupabaseConfigured() || currentUser.role !== "admin") return;
+    fetchProfiles().then(setUsers);
+  }, [currentUser.role]);
 
   // Auth state listener – load personal data on sign in
   useEffect(() => {
@@ -177,6 +230,75 @@ export default function RentifyApp() {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Realtime messages and threads listener
+  useEffect(() => {
+    if (!isLoggedIn || !isSupabaseConfigured()) return;
+    const sb = getSupabaseBrowserClient();
+    if (!sb) return;
+
+    const messagesChannel = sb
+      .channel("realtime_messages")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "messages" },
+        (payload) => {
+          const newMsg = payload.new;
+          setThreads((cur) =>
+            cur.map((t) => {
+              if (t.id === newMsg.thread_id) {
+                if (t.messages.some((m) => m.id === newMsg.id)) return t;
+                return {
+                  ...t,
+                  messages: [
+                    ...t.messages,
+                    {
+                      id: newMsg.id,
+                      senderId: newMsg.sender_id,
+                      body: newMsg.body,
+                      createdAt: newMsg.created_at,
+                    },
+                  ],
+                };
+              }
+              return t;
+            })
+          );
+        }
+      )
+      .subscribe();
+
+    const threadsChannel = sb
+      .channel("realtime_threads")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "threads" },
+        (payload) => {
+          const newThread = payload.new;
+          if (newThread.renter_id === currentUser.id || newThread.owner_id === currentUser.id) {
+            setThreads((cur) => {
+              if (cur.some((t) => t.id === newThread.id)) return cur;
+              return [
+                {
+                  id: newThread.id,
+                  listingId: newThread.listing_id,
+                  renterId: newThread.renter_id,
+                  ownerId: newThread.owner_id,
+                  messages: [],
+                },
+                ...cur,
+              ];
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      sb.removeChannel(messagesChannel);
+      sb.removeChannel(threadsChannel);
+    };
+  }, [isLoggedIn, currentUser.id]);
+
   function notify(message: string) {
     setToast(message);
     window.setTimeout(() => setToast(null), 2800);
@@ -184,7 +306,7 @@ export default function RentifyApp() {
 
   const filteredListings = useMemo(() => {
     const text = query.trim().toLowerCase();
-    return listings.filter((listing) => {
+    const filtered = listings.filter((listing) => {
       const matchesText =
         !text ||
         [listing.title, listing.description, listing.category, listing.city, listing.area, listing.ownerName]
@@ -195,9 +317,38 @@ export default function RentifyApp() {
       const matchesCity = city === "All" || listing.city === city;
       const matchesPrice = listing.pricePerDay <= maxPrice;
       const matchesAvailability = !availableOnly || listing.availability === "available";
-      return matchesText && matchesCategory && matchesCity && matchesPrice && matchesAvailability;
+
+      let matchesDistance = true;
+      if (userCoords && maxDistance !== null) {
+        if (listing.lat !== undefined && listing.lng !== undefined) {
+          const dist = getDistanceInKm(userCoords.lat, userCoords.lng, Number(listing.lat), Number(listing.lng));
+          matchesDistance = dist <= maxDistance;
+        } else {
+          matchesDistance = false;
+        }
+      }
+
+      return matchesText && matchesCategory && matchesCity && matchesPrice && matchesAvailability && matchesDistance;
     });
-  }, [availableOnly, category, city, listings, maxPrice, query]);
+
+    if (sortBy === "priceAsc") {
+      filtered.sort((a, b) => a.pricePerDay - b.pricePerDay);
+    } else if (sortBy === "priceDesc") {
+      filtered.sort((a, b) => b.pricePerDay - a.pricePerDay);
+    } else if (sortBy === "distance" && userCoords) {
+      filtered.sort((a, b) => {
+        const distA = a.lat !== undefined && a.lng !== undefined
+          ? getDistanceInKm(userCoords.lat, userCoords.lng, Number(a.lat), Number(a.lng))
+          : Infinity;
+        const distB = b.lat !== undefined && b.lng !== undefined
+          ? getDistanceInKm(userCoords.lat, userCoords.lng, Number(b.lat), Number(b.lng))
+          : Infinity;
+        return distA - distB;
+      });
+    }
+
+    return filtered;
+  }, [availableOnly, category, city, listings, maxPrice, query, userCoords, maxDistance, sortBy]);
 
   const currentUserListings = listings.filter((listing) => listing.ownerId === currentUser.id);
   const currentUserBookings = bookings.filter(
@@ -246,7 +397,21 @@ export default function RentifyApp() {
     setBookingListing(null);
     setDashboardTab("bookings");
     notify("Booking request sent. The owner can accept or reject it.");
-    if (isLoggedIn) await createBooking(booking);
+    if (isLoggedIn) {
+      await createBooking(booking);
+      fetchProfile(listing.ownerId).then((owner) => {
+        if (owner && owner.email) {
+          triggerEmailNotification({
+            type: "new_booking",
+            toEmail: owner.email,
+            ownerName: owner.name,
+            itemTitle: listing.title,
+            senderName: currentUser.name,
+            message: note || "No message included.",
+          }).catch(console.error);
+        }
+      });
+    }
   }
 
   async function updateBooking(id: string, status: BookingStatus) {
@@ -275,6 +440,18 @@ export default function RentifyApp() {
       if (isLoggedIn) {
         await createThread({ id: thread.id, listingId: thread.listingId, renterId: thread.renterId, ownerId: thread.ownerId });
         await sbSendMessage(thread.id, currentUser.id, thread.messages[0].body, firstMsgId);
+        fetchProfile(listing.ownerId).then((owner) => {
+          if (owner && owner.email) {
+            triggerEmailNotification({
+              type: "new_message",
+              toEmail: owner.email,
+              ownerName: owner.name,
+              itemTitle: listing.title,
+              senderName: currentUser.name,
+              message: thread!.messages[0].body,
+            }).catch(console.error);
+          }
+        });
       }
     }
     setChatListing(listing);
@@ -286,7 +463,28 @@ export default function RentifyApp() {
     const msgId = uid("msg");
     const msg = { id: msgId, senderId: currentUser.id, body, createdAt: new Date().toISOString() };
     setThreads((cur) => cur.map((t) => t.id === threadId ? { ...t, messages: [...t.messages, msg] } : t));
-    if (isLoggedIn) await sbSendMessage(threadId, currentUser.id, body, msgId);
+    if (isLoggedIn) {
+      await sbSendMessage(threadId, currentUser.id, body, msgId);
+      const thread = threads.find((t) => t.id === threadId);
+      if (thread) {
+        const recipientId = thread.renterId === currentUser.id ? thread.ownerId : thread.renterId;
+        const listing = listings.find((l) => l.id === thread.listingId);
+        if (listing) {
+          fetchProfile(recipientId).then((recipient) => {
+            if (recipient && recipient.email) {
+              triggerEmailNotification({
+                type: "new_message",
+                toEmail: recipient.email,
+                ownerName: recipient.name,
+                itemTitle: listing.title,
+                senderName: currentUser.name,
+                message: body,
+              }).catch(console.error);
+            }
+          });
+        }
+      }
+    }
   }
 
   async function addReview(listingId: string, toUserId: string, body: string, rating: number) {
@@ -302,9 +500,13 @@ export default function RentifyApp() {
     if (isLoggedIn) await sbDeleteListing(id);
   }
 
-  function banUser(id: string) {
-    setUsers((current) => current.map((user) => (user.id === id ? { ...user, banned: !user.banned } : user)));
+  async function banUser(id: string) {
+    const userToToggle = users.find((u) => u.id === id);
+    if (!userToToggle) return;
+    const nextBanned = !userToToggle.banned;
+    setUsers((current) => current.map((user) => (user.id === id ? { ...user, banned: nextBanned } : user)));
     notify("User moderation status updated.");
+    if (isLoggedIn) await updateProfileBannedStatus(id, nextBanned);
   }
 
   return (
@@ -317,11 +519,13 @@ export default function RentifyApp() {
         theme={theme}
         onTheme={() => setTheme(theme === "dark" ? "light" : "dark")}
         isLoggedIn={isLoggedIn}
+        mobileMenuOpen={mobileMenuOpen}
+        onMobileMenu={() => setMobileMenuOpen(!mobileMenuOpen)}
         onAuth={setAuthMode}
-        onSignOut={async () => { await signOut(); notify("Signed out."); }}
-        onList={() => setShowListingForm(true)}
-        onDashboard={() => setDashboardTab("overview")}
-        onAdmin={() => setDashboardTab("admin")}
+        onSignOut={async () => { await signOut(); notify("Signed out."); setMobileMenuOpen(false); }}
+        onList={() => { setShowListingForm(true); setMobileMenuOpen(false); }}
+        onDashboard={() => { setDashboardTab("overview"); setMobileMenuOpen(false); }}
+        onAdmin={() => { setDashboardTab("admin"); setMobileMenuOpen(false); }}
       />
 
       <Hero onBrowse={() => document.getElementById("browse")?.scrollIntoView()} onList={() => setShowListingForm(true)} />
@@ -369,6 +573,66 @@ export default function RentifyApp() {
               <span>Available now</span>
             </label>
           </div>
+          
+          <div className="mt-4 grid gap-4 md:grid-cols-[1.2fr_0.8fr] md:items-end border-t border-[var(--border)]/60 pt-4">
+            <div>
+              <div className="mb-2 flex items-center justify-between text-xs font-bold uppercase tracking-[0.18em] text-[var(--muted)]">
+                <span>Proximity Filter</span>
+                <span>{userCoords ? (maxDistance ? `${maxDistance} km` : "Any distance") : "Requires GPS location"}</span>
+              </div>
+              <div className="flex gap-3 items-center">
+                <button
+                  type="button"
+                  onClick={requestUserLocation}
+                  disabled={locatingUser}
+                  className={cn(
+                    "flex items-center gap-2 h-11 px-4 rounded-xl text-xs font-semibold border transition-all duration-200",
+                    userCoords
+                      ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"
+                      : "border-[var(--border)] hover:bg-[var(--border)] text-[var(--text)] hover:text-white"
+                  )}
+                >
+                  <MapPin size={14} className={locatingUser ? "animate-bounce" : ""} />
+                  {locatingUser ? "Locating..." : userCoords ? "Location Saved" : "Use GPS Location"}
+                </button>
+                {userCoords ? (
+                  <input
+                    aria-label="Max distance"
+                    className="range-input flex-1"
+                    min={1}
+                    max={100}
+                    step={1}
+                    type="range"
+                    value={maxDistance ?? 100}
+                    onChange={(event) => {
+                      const val = Number(event.target.value);
+                      setMaxDistance(val === 100 ? null : val);
+                    }}
+                  />
+                ) : (
+                  <div className="text-xs text-[var(--muted)] italic">
+                    Click the button to filter by distance from you.
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <div className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-[var(--muted)]">
+                Sort listings
+              </div>
+              <select
+                className="w-full bg-[var(--bg)] border border-[var(--border)] rounded-xl h-11 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary text-[var(--text)]"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+              >
+                <option value="relevance">Default (Relevance)</option>
+                <option value="priceAsc">Price: Low to High</option>
+                <option value="priceDesc">Price: High to Low</option>
+                {userCoords && <option value="distance">Distance: Closest</option>}
+              </select>
+            </div>
+          </div>
         </motion.div>
 
         <div className="mx-auto mt-8 flex max-w-6xl flex-wrap gap-2">
@@ -391,6 +655,7 @@ export default function RentifyApp() {
         onBooking={setBookingListing}
         onChat={createOrOpenThread}
         onOpen={setSelectedListing}
+        userCoords={userCoords}
       />
 
       <StartupSections onList={() => setShowListingForm(true)} />
@@ -523,6 +788,8 @@ function Header({
   unreadCount,
   theme,
   isLoggedIn,
+  mobileMenuOpen,
+  onMobileMenu,
   onTheme,
   onAuth,
   onSignOut,
@@ -534,6 +801,8 @@ function Header({
   unreadCount: number;
   theme: "light" | "dark";
   isLoggedIn: boolean;
+  mobileMenuOpen: boolean;
+  onMobileMenu: () => void;
   onTheme: () => void;
   onAuth: (mode: AuthMode) => void;
   onSignOut: () => void;
@@ -542,6 +811,7 @@ function Header({
   onAdmin: () => void;
 }) {
   return (
+    <>
     <header className="fixed left-0 right-0 top-0 z-50 border-b border-[var(--border)] bg-[var(--bg)]/82 backdrop-blur-2xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 md:px-8">
         <a className="brand" href="#top" aria-label="Rentify home">
@@ -576,13 +846,42 @@ function Header({
             <Plus size={16} />
             List item
           </button>
-          <button className="avatar-chip" onClick={onDashboard}>
+          <button className="avatar-chip hidden md:flex" onClick={onDashboard}>
             <span>{currentUser.avatar}</span>
             <span className="hidden sm:block">{currentUser.name.split(" ")[0]}</span>
+          </button>
+          <button className="icon-btn md:hidden" onClick={onMobileMenu} aria-label="Open menu">
+            {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
       </div>
     </header>
+    {/* Mobile slide-out menu */}
+    {mobileMenuOpen && (
+      <div className="fixed inset-0 z-40 md:hidden">
+        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onMobileMenu} />
+        <nav className="absolute right-0 top-0 h-full w-72 bg-[var(--bg)] shadow-2xl flex flex-col p-6 gap-4 pt-20">
+          <a href="#browse" className="text-lg font-bold py-2 border-b border-[var(--border)]" onClick={onMobileMenu}>Browse</a>
+          <a href="#trending" className="text-lg font-bold py-2 border-b border-[var(--border)]" onClick={onMobileMenu}>Trending</a>
+          <a href="#categories" className="text-lg font-bold py-2 border-b border-[var(--border)]" onClick={onMobileMenu}>Categories</a>
+          <button className="text-lg font-bold py-2 border-b border-[var(--border)] text-left" onClick={onDashboard}>Dashboard</button>
+          {currentUser.role === "admin" && <button className="text-lg font-bold py-2 border-b border-[var(--border)] text-left" onClick={onAdmin}>Admin</button>}
+          <div className="mt-auto flex flex-col gap-3">
+            {isLoggedIn ? (
+              <button className="btn-secondary h-12 w-full justify-center" onClick={onSignOut}>Sign out</button>
+            ) : (
+              <button className="btn-secondary h-12 w-full justify-center" onClick={() => { onAuth("login"); onMobileMenu(); }}>
+                <LogIn size={16} />Login
+              </button>
+            )}
+            <button className="btn-primary h-12 w-full justify-center" onClick={isLoggedIn ? onList : () => { onAuth("login"); onMobileMenu(); }}>
+              <Plus size={16} />List item
+            </button>
+          </div>
+        </nav>
+      </div>
+    )}
+    </>
   );
 }
 
@@ -731,6 +1030,7 @@ function Marketplace({
   onBooking,
   onChat,
   onOpen,
+  userCoords,
 }: {
   listings: Listing[];
   favorites: string[];
@@ -738,6 +1038,7 @@ function Marketplace({
   onBooking: (listing: Listing) => void;
   onChat: (listing: Listing) => void;
   onOpen: (listing: Listing) => void;
+  userCoords: { lat: number; lng: number } | null;
 }) {
   const featured = listings.find((listing) => listing.featured) ?? listings[0];
 
@@ -758,6 +1059,11 @@ function Marketplace({
                 <span className="mini-chip dark-chip">{featured.category}</span>
                 <span className="mini-chip dark-chip">{featured.area}</span>
                 <span className="mini-chip dark-chip">{featured.rating} stars</span>
+                {userCoords && featured.lat !== undefined && featured.lng !== undefined && (
+                  <span className="mini-chip bg-emerald-500/20 text-emerald-300 font-bold">
+                    {getDistanceInKm(userCoords.lat, userCoords.lng, Number(featured.lat), Number(featured.lng)).toFixed(1)} km away
+                  </span>
+                )}
               </div>
               <h3 className="text-3xl font-black md:text-5xl">{featured.title}</h3>
               <p className="mt-4 max-w-2xl text-sm leading-7 text-white/62">{featured.description}</p>
@@ -790,6 +1096,7 @@ function Marketplace({
               onBooking={() => onBooking(listing)}
               onChat={() => onChat(listing)}
               onOpen={() => onOpen(listing)}
+              userCoords={userCoords}
             />
           ))}
         </motion.div>
@@ -808,6 +1115,7 @@ function ListingCard({
   onBooking,
   onChat,
   onOpen,
+  userCoords,
 }: {
   listing: Listing;
   favorite: boolean;
@@ -815,15 +1123,18 @@ function ListingCard({
   onBooking: () => void;
   onChat: () => void;
   onOpen: () => void;
+  userCoords: { lat: number; lng: number } | null;
 }) {
   return (
     <motion.article variants={item} className="listing-card">
       <button className="absolute inset-0 z-0" onClick={onOpen} aria-label={`Open ${listing.title}`} />
       <div className="relative">
         <img className="h-56 w-full object-cover transition duration-500 group-hover:scale-105" src={listing.images[0]} alt={listing.title} />
-        <div className="absolute left-4 top-4 rounded-full border border-white/45 bg-white/80 px-3 py-1 text-xs font-black backdrop-blur">
-          {listing.badge}
-        </div>
+        {listing.badge && (
+          <div className="absolute left-4 top-4 rounded-full border border-white/45 bg-white/80 px-3 py-1 text-xs font-black backdrop-blur">
+            {listing.badge}
+          </div>
+        )}
         <button className={cn("heart-btn", favorite && "heart-active")} onClick={onFavorite} aria-label="Save listing">
           <Heart size={17} fill={favorite ? "currentColor" : "none"} />
         </button>
@@ -837,9 +1148,16 @@ function ListingCard({
           </span>
         </div>
         <h3 className="line-clamp-1 text-xl font-black">{listing.title}</h3>
-        <div className="mt-2 flex items-center gap-2 text-sm text-[var(--muted)]">
-          <MapPin size={15} />
-          {listing.area}, {listing.city}
+        <div className="mt-2 flex items-center justify-between text-sm text-[var(--muted)]">
+          <div className="flex items-center gap-2">
+            <MapPin size={15} />
+            <span className="line-clamp-1">{listing.area}, {listing.city}</span>
+          </div>
+          {userCoords && listing.lat !== undefined && listing.lng !== undefined && (
+            <span className="text-xs font-bold text-emerald-400 whitespace-nowrap">
+              {getDistanceInKm(userCoords.lat, userCoords.lng, Number(listing.lat), Number(listing.lng)).toFixed(1)} km away
+            </span>
+          )}
         </div>
         <div className="mt-5 flex items-end justify-between border-t border-[var(--border)] pt-4">
           <div>
@@ -1147,7 +1465,7 @@ function Dashboard({
                             </button>
                           )}
                           {booking.status === "completed" && (
-                            <ReviewQuickAdd listing={listing} user={user} onReview={onReview} />
+                            <ReviewQuickAdd listing={listing} user={user} booking={booking} onReview={onReview} />
                           )}
                         </div>
                       </div>
@@ -1484,96 +1802,7 @@ function AuthModal({
   );
 }
 
-function ListingFormModal({
-  currentUser,
-  onClose,
-  onCreate,
-}: {
-  currentUser: UserProfile;
-  onClose: () => void;
-  onCreate: (listing: Listing) => void;
-}) {
-  const [preview, setPreview] = useState("https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=1200&q=80");
 
-  function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const data = new FormData(event.currentTarget);
-    const title = String(data.get("title") ?? "");
-    const category = String(data.get("category") ?? "Electronics");
-    const city = String(data.get("city") ?? "Bangalore");
-    const area = String(data.get("area") ?? "");
-    const pricePerDay = Number(data.get("price") ?? 500);
-    const securityDeposit = Number(data.get("deposit") ?? 1000);
-    onCreate({
-      id: uid("lst"),
-      ownerId: currentUser.id,
-      ownerName: currentUser.name,
-      ownerAvatar: currentUser.avatar,
-      ownerRating: currentUser.rating,
-      title,
-      description: String(data.get("description") ?? ""),
-      category,
-      city,
-      area,
-      pricePerDay,
-      securityDeposit,
-      delivery: data.get("delivery") as Listing["delivery"],
-      availability: "available",
-      availableFrom: String(data.get("from") ?? "2026-06-02"),
-      availableTo: String(data.get("to") ?? "2026-08-30"),
-      images: [preview],
-      rating: 5,
-      reviewCount: 0,
-      badge: "New",
-      featured: false,
-      createdAt: new Date().toISOString(),
-      reports: 0,
-    });
-  }
-
-  return (
-    <Modal onClose={onClose}>
-      <form className="modal-card max-w-4xl" onSubmit={submit}>
-        <ModalClose onClose={onClose} />
-        <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-          <div>
-            <div className="section-eyebrow">Upload listing</div>
-            <h2 className="mt-2 text-3xl font-black">List something rent-worthy</h2>
-            <div className="mt-5 overflow-hidden rounded-[24px] border border-[var(--border)]">
-              <img src={preview} alt="Listing preview" className="h-72 w-full object-cover" />
-            </div>
-            <label className="label mt-4">
-              Image URL or Supabase Storage public URL
-              <input className="input" value={preview} onChange={(event) => setPreview(event.target.value)} />
-            </label>
-            <div className="mt-3 rounded-2xl border border-dashed border-[var(--border)] p-4 text-sm text-[var(--muted)]">
-              <ImagePlus className="mb-2 text-orange-500" size={20} />
-              Supabase Storage bucket is defined in `supabase/schema.sql`. Paste an uploaded public URL here for now.
-            </div>
-          </div>
-          <div className="grid gap-3">
-            <label className="label">Title<input className="input" name="title" defaultValue="DJI Mini 4 Pro Drone Kit" required /></label>
-            <label className="label">Description<textarea className="input min-h-24" name="description" defaultValue="Drone, controller, three batteries, ND filters, prop guards, and carry case." required /></label>
-            <div className="grid gap-3 md:grid-cols-2">
-              <label className="label">Category<SelectNative name="category" options={categories.filter((cat) => cat !== "All")} /></label>
-              <label className="label">City<input className="input" name="city" defaultValue="Bangalore" required /></label>
-              <label className="label">Area<input className="input" name="area" defaultValue="Indiranagar" required /></label>
-              <label className="label">Delivery<SelectNative name="delivery" options={["pickup", "delivery", "both"]} /></label>
-              <label className="label">Price per day<input className="input" name="price" type="number" defaultValue={950} required /></label>
-              <label className="label">Security deposit<input className="input" name="deposit" type="number" defaultValue={7000} required /></label>
-              <label className="label">Available from<input className="input" name="from" type="date" defaultValue="2026-06-03" required /></label>
-              <label className="label">Available to<input className="input" name="to" type="date" defaultValue="2026-08-30" required /></label>
-            </div>
-            <button className="btn-primary mt-2 h-12" type="submit">
-              <Upload size={16} />
-              Publish listing
-            </button>
-          </div>
-        </div>
-      </form>
-    </Modal>
-  );
-}
 
 function BookingModal({
   listing,
@@ -1652,6 +1881,47 @@ function ListingDetailModal({
             </div>
             <h2 className="mt-4 text-4xl font-black">{listing.title}</h2>
             <p className="mt-4 leading-7 text-[var(--muted)]">{listing.description}</p>
+
+            {/* Phone & Security remarks */}
+            {(listing.phone || listing.securityRemarks) && (
+              <div className="mt-6 rounded-2xl border border-[var(--border)] bg-[var(--bg2)] p-4 flex flex-col gap-3">
+                {listing.phone && (
+                  <div className="flex items-center gap-3 text-sm">
+                    <Phone className="text-orange-500 flex-shrink-0" size={16} />
+                    <div>
+                      <div className="font-bold text-[var(--muted)] text-xs uppercase tracking-wider">Contact Phone</div>
+                      <div className="font-black mt-0.5">{listing.phone}</div>
+                    </div>
+                  </div>
+                )}
+                {listing.securityRemarks && (
+                  <div className="flex items-start gap-3 text-sm border-t border-[var(--border)] pt-3">
+                    <Shield className="text-orange-500 flex-shrink-0 mt-0.5" size={16} />
+                    <div>
+                      <div className="font-bold text-[var(--muted)] text-xs uppercase tracking-wider">Security Requirements</div>
+                      <div className="mt-1 text-[var(--text)] leading-relaxed">{listing.securityRemarks}</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Address & Map */}
+            {listing.address && (
+              <div className="mt-6 rounded-2xl border border-[var(--border)] p-4">
+                <div className="flex items-start gap-2 text-sm mb-2">
+                  <MapPin className="text-orange-500 flex-shrink-0 mt-0.5" size={16} />
+                  <div>
+                    <div className="font-bold text-[var(--muted)] text-xs uppercase tracking-wider">Location Address</div>
+                    <div className="mt-0.5 font-bold text-[var(--text)]">{listing.address}</div>
+                  </div>
+                </div>
+                {listing.lat != null && listing.lng != null && (
+                  <MapDisplay lat={Number(listing.lat)} lng={Number(listing.lng)} />
+                )}
+              </div>
+            )}
+
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
               <Metric label="Price per day" value={formatInr(listing.pricePerDay)} />
               <Metric label="Deposit" value={formatInr(listing.securityDeposit)} />
@@ -1740,26 +2010,69 @@ function ChatDrawer({
 function ReviewQuickAdd({
   listing,
   user,
+  booking,
   onReview,
 }: {
   listing: Listing;
   user: UserProfile;
+  booking: Booking;
   onReview: (listingId: string, toUserId: string, body: string, rating: number) => void;
 }) {
   const [open, setOpen] = useState(false);
-  if (!open) return <button className="btn-secondary" onClick={() => setOpen(true)}>Leave review</button>;
+  const [rating, setRating] = useState(5);
+  const [hoverRating, setHoverRating] = useState<number | null>(null);
+
+  if (!open) return <button className="btn-secondary animate-fade-in" onClick={() => setOpen(true)}>Leave review</button>;
+
   return (
     <form
-      className="flex flex-1 flex-wrap gap-2"
+      className="flex flex-col gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg)]/95 p-4 w-full md:max-w-md animate-slide-up"
       onSubmit={(event) => {
         event.preventDefault();
         const data = new FormData(event.currentTarget);
-        onReview(listing.id, listing.ownerId === user.id ? "user-rhea" : listing.ownerId, String(data.get("review") ?? ""), 5);
+        const bodyText = String(data.get("review") ?? "").trim();
+        if (!bodyText) return;
+        const targetUserId = booking.renterId === user.id ? booking.ownerId : booking.renterId;
+        onReview(listing.id, targetUserId, bodyText, rating);
         setOpen(false);
       }}
     >
-      <input className="input min-w-56 flex-1" name="review" defaultValue="Great rental experience." />
-      <button className="btn-primary" type="submit">Post</button>
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">Select Rating</span>
+        <div className="flex gap-1">
+          {[1, 2, 3, 4, 5].map((star) => (
+            <button
+              key={star}
+              type="button"
+              onClick={() => setRating(star)}
+              onMouseEnter={() => setHoverRating(star)}
+              onMouseLeave={() => setHoverRating(null)}
+              className="p-1 transition duration-150 hover:scale-110"
+              aria-label={`Set rating to ${star} stars`}
+            >
+              <Star
+                size={18}
+                className={cn(
+                  "transition-colors duration-150",
+                  star <= (hoverRating ?? rating)
+                    ? "fill-amber-400 text-amber-400"
+                    : "text-stone-400/40 dark:text-stone-600/40"
+                )}
+              />
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="flex gap-2">
+        <input
+          className="input min-w-56 flex-1 h-10 text-sm"
+          name="review"
+          placeholder="Great experience. Recommended!"
+          required
+        />
+        <button className="btn-primary h-10 px-4 text-sm" type="submit">Post</button>
+        <button className="btn-secondary h-10 px-4 text-sm" type="button" onClick={() => setOpen(false)}>Cancel</button>
+      </div>
     </form>
   );
 }
