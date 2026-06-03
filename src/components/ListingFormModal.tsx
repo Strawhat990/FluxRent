@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
-import { MapPin, Upload, X, Phone, Shield, ImagePlus, Loader2 } from "lucide-react";
+import { useState, useRef, useCallback } from "react";
+import { MapPin, Upload, X, Phone, Shield, ImagePlus, Loader2, Navigation } from "lucide-react";
 import type { Listing, UserProfile } from "@/lib/types";
 import { categories } from "@/lib/demo-data";
 import { uid } from "@/lib/utils";
@@ -31,14 +31,17 @@ export default function ListingFormModal({ currentUser, onClose, onCreate }: Pro
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Reverse geocode when lat/lng changes
-  useEffect(() => {
-    if (lat == null || lng == null) return;
-    fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`)
-      .then((r) => r.json())
-      .then((d) => { if (d.display_name) setAddress(d.display_name); })
-      .catch(() => {});
-  }, [lat, lng]);
+  // Detect GPS location on form open
+  const detectGPS = useCallback(() => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLat(pos.coords.latitude);
+        setLng(pos.coords.longitude);
+      },
+      () => {}
+    );
+  }, []);
 
   const addFiles = useCallback((incoming: File[]) => {
     const valid = incoming.filter((f) => f.type.startsWith("image/")).slice(0, 5 - files.length);
@@ -76,7 +79,7 @@ export default function ListingFormModal({ currentUser, onClose, onCreate }: Pro
       phone: String(data.get("phone") ?? ""),
       securityRemarks: String(data.get("securityRemarks") ?? ""),
       pricePerDay: Number(data.get("price") ?? 0),
-      securityDeposit: Number(data.get("deposit") ?? 0),
+      securityDeposit: 0,
       delivery: data.get("delivery") as Listing["delivery"],
       availability: "available",
       availableFrom: String(data.get("from") ?? ""),
@@ -147,19 +150,34 @@ export default function ListingFormModal({ currentUser, onClose, onCreate }: Pro
 
             {/* Map picker */}
             <div>
-              <div className="mb-2 flex items-center gap-2 text-sm font-bold">
-                <MapPin size={16} className="text-orange-500" />
-                Pin your location
+              <div className="mb-2 flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm font-bold">
+                  <MapPin size={16} className="text-orange-500" />
+                  Pin your location
+                </div>
+                <button
+                  type="button"
+                  onClick={detectGPS}
+                  className="flex items-center gap-1 rounded-full border border-[var(--border)] px-3 py-1 text-xs font-bold hover:bg-[var(--border)] transition-colors"
+                >
+                  <Navigation size={12} className="text-orange-500" />
+                  Auto-detect
+                </button>
               </div>
-              <MapPicker lat={lat} lng={lng} onChange={(la, lo) => { setLat(la); setLng(lo); }} />
-              {address && (
-                <p className="mt-2 text-xs text-[var(--muted)] leading-5">📍 {address}</p>
-              )}
+              <MapPicker
+                lat={lat}
+                lng={lng}
+                onChange={(la, lo, addr) => {
+                  setLat(la);
+                  setLng(lo);
+                  if (addr) setAddress(addr);
+                }}
+              />
             </div>
 
             {/* Address override */}
             <label className="label">
-              Full address (auto-filled from map, edit if needed)
+              Full address <span className="text-[var(--muted)] font-normal text-xs">(auto-filled from map, edit if needed)</span>
               <input className="input" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Street, Area, City, PIN" />
             </label>
           </div>
@@ -185,7 +203,7 @@ export default function ListingFormModal({ currentUser, onClose, onCreate }: Pro
                 </select>
               </label>
               <label className="label">Price per day (₹) <input className="input" name="price" type="number" min={1} placeholder="500" required /></label>
-              <label className="label">Security deposit (₹) <input className="input" name="deposit" type="number" min={0} placeholder="2000" required /></label>
+
               <label className="label">Available from <input className="input" name="from" type="date" required /></label>
               <label className="label">Available to <input className="input" name="to" type="date" required /></label>
             </div>
@@ -196,11 +214,15 @@ export default function ListingFormModal({ currentUser, onClose, onCreate }: Pro
               <input className="input" name="phone" type="tel" placeholder="+91 9876543210" required />
             </label>
 
-            {/* Security remarks */}
+            {/* Security / requirements — free text */}
             <label className="label">
-              <span className="flex items-center gap-2"><Shield size={14} className="text-orange-500" />Security / renter requirements</span>
-              <textarea className="input min-h-[72px]" name="securityRemarks"
-                placeholder="e.g. ID proof required, cash deposit on pickup, no pets, 2-day minimum rental…" />
+              <span className="flex items-center gap-2"><Shield size={14} className="text-orange-500" />Security &amp; requirements</span>
+              <textarea
+                className="input min-h-[80px]"
+                name="securityRemarks"
+                placeholder="Describe what you need from the renter — e.g. Aadhar ID, cash deposit, advance payment, documents, references, no smoking…"
+              />
+              <span className="text-xs text-[var(--muted)] mt-1 block">Anything you require before handing over the item. Leave blank if none.</span>
             </label>
 
             <button type="submit" disabled={busy} className="btn-primary mt-2 h-12 w-full">
