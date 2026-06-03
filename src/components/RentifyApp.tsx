@@ -2,6 +2,10 @@
 
 import { AnimatePresence, motion, type Variants } from "framer-motion";
 import {
+  Flag,
+  Flame,
+  Home,
+  ShoppingBag,
   Bell,
   Menu,
   CalendarDays,
@@ -42,7 +46,7 @@ import {
   demoReviews,
   demoUsers,
 } from "@/lib/demo-data";
-import { cn, daysBetween, formatInr, uid, getDistanceInKm } from "@/lib/utils";
+import { cn, daysBetween, formatInr, uid, getDistanceInKm, getFreshnessLabel } from "@/lib/utils";
 import {
   addFavorite,
   createBooking,
@@ -528,7 +532,11 @@ export default function RentifyApp() {
         onAdmin={() => { setDashboardTab("admin"); setMobileMenuOpen(false); }}
       />
 
-      <Hero onBrowse={() => document.getElementById("browse")?.scrollIntoView()} onList={() => setShowListingForm(true)} />
+      <Hero
+        onBrowse={() => document.getElementById("browse")?.scrollIntoView()}
+        onList={() => setShowListingForm(true)}
+        onSearch={(q) => { setQuery(q); document.getElementById("browse")?.scrollIntoView({ behavior: "smooth" }); }}
+      />
       <Marquee />
 
       <section id="browse" className="section-pad relative">
@@ -693,6 +701,30 @@ export default function RentifyApp() {
         List an item
       </button>
 
+      {/* ── Mobile Bottom Nav (phones only) ── */}
+      <nav className="bottom-nav md:hidden">
+        <button className="bottom-nav-btn" onClick={() => document.getElementById("top")?.scrollIntoView({ behavior: "smooth" })}>
+          <Home size={20} />
+          Home
+        </button>
+        <button className="bottom-nav-btn" onClick={() => document.getElementById("browse")?.scrollIntoView({ behavior: "smooth" })}>
+          <Search size={20} />
+          Browse
+        </button>
+        <button className="bottom-nav-btn" onClick={() => setShowListingForm(true)}>
+          <Plus size={22} />
+          List
+        </button>
+        <button className="bottom-nav-btn" onClick={() => { setDashboardTab("messages"); document.getElementById("dashboard")?.scrollIntoView({ behavior: "smooth" }); }}>
+          <MessageCircle size={20} />
+          Chat
+        </button>
+        <button className="bottom-nav-btn" onClick={() => { setDashboardTab("overview"); document.getElementById("dashboard")?.scrollIntoView({ behavior: "smooth" }); }}>
+          <User size={20} />
+          Me
+        </button>
+      </nav>
+
       <AnimatePresence>
         {authMode && (
           <AuthModal
@@ -730,13 +762,13 @@ export default function RentifyApp() {
             onFavorite={() => toggleFavorite(selectedListing)}
             onBooking={() => setBookingListing(selectedListing)}
             onChat={() => createOrOpenThread(selectedListing)}
-            onReport={() => {
+            onReport={(reason) => {
               setListings((current) =>
                 current.map((listing) =>
                   listing.id === selectedListing.id ? { ...listing, reports: listing.reports + 1 } : listing,
                 ),
               );
-              notify("Report submitted for moderation.");
+              notify(`Report submitted: "${reason}". Our team will review this listing.`);
             }}
           />
         )}
@@ -885,7 +917,8 @@ function Header({
   );
 }
 
-function Hero({ onBrowse, onList }: { onBrowse: () => void; onList: () => void }) {
+function Hero({ onBrowse, onList, onSearch }: { onBrowse: () => void; onList: () => void; onSearch: (q: string) => void }) {
+  const [heroQuery, setHeroQuery] = useState("");
   const floaters = [
     ["Sony A7 IV kit", "INR 800/day"],
     ["Self drive car", "INR 1,200/day"],
@@ -893,6 +926,11 @@ function Hero({ onBrowse, onList }: { onBrowse: () => void; onList: () => void }
     ["Party speaker", "INR 600/day"],
     ["Camping kit", "INR 400/day"],
   ];
+
+  function handleSearch() {
+    onSearch(heroQuery.trim());
+    onBrowse();
+  }
 
   return (
     <section id="top" className="section-pad relative flex min-h-[92vh] items-center pt-32">
@@ -913,14 +951,27 @@ function Hero({ onBrowse, onList }: { onBrowse: () => void; onList: () => void }
             A premium peer-to-peer marketplace for cameras, cars, fashion, tools, gaming gear, event kits, and the
             useful things hiding in your neighborhood.
           </motion.p>
-          <motion.div variants={item} className="flex flex-wrap gap-3">
-            <button className="btn-ink h-14 px-7" onClick={onBrowse}>
-              Explore rentals
-              <ChevronRight size={18} />
+
+          {/* ── Hero Search Bar ── */}
+          <motion.div variants={item} className="hero-search">
+            <Search size={18} className="ml-4 shrink-0 text-[var(--muted)]" />
+            <input
+              value={heroQuery}
+              onChange={(e) => setHeroQuery(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+              placeholder="Search cameras, cars, tools, dresses…"
+              aria-label="Search rentals"
+            />
+            <button onClick={handleSearch} aria-label="Search">
+              <Search size={16} />
+              Search
             </button>
-            <button className="btn-secondary h-14 px-7" onClick={onList}>
-              <Upload size={18} />
-              Start listing
+          </motion.div>
+
+          <motion.div variants={item} className="mt-4 flex flex-wrap gap-3">
+            <button className="btn-secondary h-12 px-6" onClick={onList}>
+              <Upload size={16} />
+              List an item
             </button>
           </motion.div>
         </motion.div>
@@ -1125,6 +1176,9 @@ function ListingCard({
   onOpen: () => void;
   userCoords: { lat: number; lng: number } | null;
 }) {
+  const freshness = getFreshnessLabel(listing.createdAt);
+  const isOwnerVerified = listing.ownerRating >= 4.5 && listing.reviewCount >= 5;
+
   return (
     <motion.article variants={item} className="listing-card">
       <button className="absolute inset-0 z-0" onClick={onOpen} aria-label={`Open ${listing.title}`} />
@@ -1135,6 +1189,11 @@ function ListingCard({
             {listing.badge}
           </div>
         )}
+        {/* Freshness chip on image */}
+        <div className={`freshness-chip absolute bottom-3 left-3 ${freshness.cls}`}>
+          <Clock size={9} />
+          {freshness.label}
+        </div>
         <button className={cn("heart-btn", favorite && "heart-active")} onClick={onFavorite} aria-label="Save listing">
           <Heart size={17} fill={favorite ? "currentColor" : "none"} />
         </button>
@@ -1165,7 +1224,12 @@ function ListingCard({
             <div className="text-xs font-bold text-[var(--muted)]">per day</div>
           </div>
           <div className="text-right text-xs text-[var(--muted)]">
-            <div className="font-black text-[var(--text)]">{listing.ownerName}</div>
+            <div className="flex items-center justify-end gap-1.5 font-black text-[var(--text)]">
+              {listing.ownerName}
+              {isOwnerVerified && (
+                <ShieldCheck size={13} className="text-emerald-500" />
+              )}
+            </div>
             <div>{listing.reviewCount} reviews</div>
           </div>
         </div>
@@ -1863,28 +1927,61 @@ function ListingDetailModal({
   onFavorite: () => void;
   onBooking: () => void;
   onChat: () => void;
-  onReport: () => void;
+  onReport: (reason: string) => void;
 }) {
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+  const freshness = getFreshnessLabel(listing.createdAt);
+  const isOwnerVerified = listing.ownerRating >= 4.5 && listing.reviewCount >= 5;
+
+  const REPORT_REASONS = [
+    { icon: "🚨", label: "Fake listing or scam" },
+    { icon: "💬", label: "Inappropriate content" },
+    { icon: "📷", label: "Wrong or stolen photos" },
+    { icon: "💰", label: "Misleading price" },
+    { icon: "🚫", label: "Prohibited item" },
+    { icon: "⚠️", label: "Other concern" },
+  ];
+
+  function handleShare() {
+    const url = window.location.href;
+    const text = `${listing.title} — ₹${listing.pricePerDay}/day on Rentify`;
+    if (navigator.share) {
+      navigator.share({ title: listing.title, text, url }).catch(() => {});
+    } else {
+      navigator.clipboard?.writeText(`${text}\n${url}`).then(() => alert("Link copied!")).catch(() => {});
+    }
+  }
+
   return (
     <Modal onClose={onClose}>
       <div className="modal-card max-w-5xl">
         <ModalClose onClose={onClose} />
         <div className="grid gap-6 lg:grid-cols-[1fr_0.8fr]">
+          {/* Left: image */}
           <div className="overflow-hidden rounded-[26px]">
-            <img src={listing.images[0]} alt={listing.title} className="h-full min-h-[420px] w-full object-cover" />
+            <img src={listing.images[0]} alt={listing.title} className="h-full min-h-[240px] w-full object-cover lg:min-h-[420px]" />
           </div>
+
+          {/* Right: details */}
           <div>
-            <div className="flex flex-wrap gap-2">
+            {/* Chips row: category + freshness */}
+            <div className="flex flex-wrap items-center gap-2">
               <span className="mini-chip">{listing.category}</span>
               <span className="mini-chip">{listing.availability}</span>
               <span className="mini-chip">{listing.area}</span>
+              <span className={`freshness-chip ${freshness.cls}`}>
+                <Clock size={10} />
+                {freshness.label}
+              </span>
             </div>
-            <h2 className="mt-4 text-4xl font-black">{listing.title}</h2>
-            <p className="mt-4 leading-7 text-[var(--muted)]">{listing.description}</p>
+
+            <h2 className="mt-4 text-3xl font-black lg:text-4xl">{listing.title}</h2>
+            <p className="mt-3 leading-7 text-[var(--muted)]">{listing.description}</p>
 
             {/* Phone & Security remarks */}
             {(listing.phone || listing.securityRemarks) && (
-              <div className="mt-6 rounded-2xl border border-[var(--border)] bg-[var(--bg2)] p-4 flex flex-col gap-3">
+              <div className="mt-5 rounded-2xl border border-[var(--border)] bg-[var(--bg2)] p-4 flex flex-col gap-3">
                 {listing.phone && (
                   <div className="flex items-center gap-3 text-sm">
                     <Phone className="text-orange-500 flex-shrink-0" size={16} />
@@ -1908,7 +2005,7 @@ function ListingDetailModal({
 
             {/* Address & Map */}
             {listing.address && (
-              <div className="mt-6 rounded-2xl border border-[var(--border)] p-4">
+              <div className="mt-5 rounded-2xl border border-[var(--border)] p-4">
                 <div className="flex items-start gap-2 text-sm mb-2">
                   <MapPin className="text-orange-500 flex-shrink-0 mt-0.5" size={16} />
                   <div>
@@ -1922,32 +2019,53 @@ function ListingDetailModal({
               </div>
             )}
 
-            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
               <Metric label="Price per day" value={formatInr(listing.pricePerDay)} />
-              <Metric label="Deposit" value={formatInr(listing.securityDeposit)} />
             </div>
-            <div className="mt-6 rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-4">
+
+            {/* Owner card with verified badge */}
+            <div className="mt-5 rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-4">
               <div className="flex items-center gap-3">
                 <div className="avatar-mini">{listing.ownerAvatar}</div>
-                <div>
-                  <div className="font-black">{listing.ownerName}</div>
-                  <div className="text-sm text-[var(--muted)]">{listing.ownerRating} owner rating - verified UI</div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <div className="font-black">{listing.ownerName}</div>
+                    {isOwnerVerified && (
+                      <span className="verified-badge">
+                        <ShieldCheck size={11} />
+                        Verified
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-sm text-[var(--muted)] mt-0.5 flex items-center gap-1">
+                    <Star size={12} className="text-amber-400" fill="currentColor" />
+                    {listing.ownerRating} rating · {listing.reviewCount} reviews
+                  </div>
                 </div>
               </div>
             </div>
+
+            {/* Action buttons */}
             <div className="mt-5 flex flex-wrap gap-2">
               <button className="btn-primary" onClick={onBooking}>Request rental</button>
               <button className="btn-secondary" onClick={onChat}><MessageCircle size={16} /> Chat</button>
               <button className="btn-secondary" onClick={onFavorite}><Heart size={16} fill={favorite ? "currentColor" : "none"} /> Save</button>
-              <button className="btn-secondary" onClick={() => navigator.share?.({ title: listing.title, text: listing.description })}><Share2 size={16} /> Share</button>
-              <button className="btn-danger" onClick={onReport}>Report</button>
+              <button className="btn-secondary" onClick={handleShare}><Share2 size={16} /> Share</button>
+              <button className="btn-danger" onClick={() => setShowReportModal(true)}><Flag size={14} /> Report</button>
             </div>
+
+            {/* Reviews */}
             <div className="mt-6">
               <h3 className="font-black">Reviews</h3>
               <div className="mt-3 grid gap-2">
                 {reviews.map((review) => (
                   <div key={review.id} className="rounded-2xl bg-[var(--bg)] p-3 text-sm text-[var(--muted)]">
-                    <strong className="text-[var(--text)]">{review.rating} stars</strong> - {review.body}
+                    <div className="flex items-center gap-1 mb-1">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star key={i} size={12} fill={i < review.rating ? "currentColor" : "none"} className={i < review.rating ? "text-amber-400" : "text-[var(--border)]"} />
+                      ))}
+                    </div>
+                    {review.body}
                   </div>
                 ))}
                 {reviews.length === 0 && <p className="text-sm text-[var(--muted)]">No reviews on this listing yet.</p>}
@@ -1956,6 +2074,56 @@ function ListingDetailModal({
           </div>
         </div>
       </div>
+
+      {/* ── Report Modal ── */}
+      <AnimatePresence>
+        {showReportModal && (
+          <motion.div
+            className="fixed inset-0 z-[300] flex items-end justify-center sm:items-center p-4 bg-black/60 backdrop-blur-sm"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={() => setShowReportModal(false)}
+          >
+            <motion.div
+              className="modal-card w-full max-w-sm"
+              initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 40, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <div className="font-black text-lg">Report this listing</div>
+                  <div className="text-sm text-[var(--muted)] mt-0.5">Tell us what's wrong</div>
+                </div>
+                <button className="icon-btn" onClick={() => setShowReportModal(false)}><X size={16} /></button>
+              </div>
+              <div className="grid gap-2">
+                {REPORT_REASONS.map((r) => (
+                  <button
+                    key={r.label}
+                    className={cn("report-option", reportReason === r.label && "selected")}
+                    onClick={() => setReportReason(r.label)}
+                  >
+                    <span className="text-xl">{r.icon}</span>
+                    <span className="font-bold text-sm">{r.label}</span>
+                    {reportReason === r.label && <Check size={16} className="ml-auto text-red-500" />}
+                  </button>
+                ))}
+              </div>
+              <button
+                className="btn-danger mt-4 w-full h-12"
+                disabled={!reportReason}
+                onClick={() => {
+                  onReport(reportReason);
+                  setShowReportModal(false);
+                  onClose();
+                }}
+              >
+                <Flag size={14} />
+                Submit Report
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </Modal>
   );
 }

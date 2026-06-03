@@ -677,7 +677,225 @@ textarea.input {
   }
 
   .floating-action {
-    bottom: 0.85rem;
+    bottom: 5rem; /* raise above bottom nav */
     right: 0.85rem;
   }
 }
+
+/* ── Hero Search ──────────────────────────────────────────────────────────── */
+.hero-search {
+  align-items: center;
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 999px;
+  box-shadow: 0 24px 70px rgba(17,16,9,0.12), 0 0 0 0px rgba(255,77,28,0);
+  display: flex;
+  gap: 0;
+  margin-top: 2.4rem;
+  max-width: 600px;
+  overflow: hidden;
+  transition: box-shadow 250ms ease, border-color 250ms ease;
+}
+
+.hero-search:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 24px 70px rgba(17,16,9,0.16), 0 0 0 5px rgba(255,77,28,0.1);
+}
+
+.hero-search input {
+  background: transparent;
+  border: 0;
+  color: var(--text);
+  flex: 1;
+  font-size: 1rem;
+  font-weight: 700;
+  min-width: 0;
+  outline: 0;
+  padding: 1rem 1.2rem;
+}
+
+.hero-search input::placeholder {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.hero-search button {
+  background: var(--accent);
+  border: 0;
+  border-radius: 0;
+  color: white;
+  flex-shrink: 0;
+  font-size: 0.9rem;
+  font-weight: 900;
+  gap: 0.4rem;
+  min-height: 3.2rem;
+  padding: 0 1.4rem;
+}
+
+.hero-search button:hover {
+  background: color-mix(in srgb, var(--accent) 85%, black);
+}
+
+/* ── Verified Badge ──────────────────────────────────────────────────────── */
+.verified-badge {
+  align-items: center;
+  background: rgba(0,196,100,0.12);
+  border: 1px solid rgba(0,196,100,0.28);
+  border-radius: 999px;
+  color: #00a855;
+  display: inline-flex;
+  font-size: 0.7rem;
+  font-weight: 900;
+  gap: 0.25rem;
+  letter-spacing: 0.06em;
+  padding: 0.22rem 0.6rem;
+  text-transform: uppercase;
+}
+
+.dark .verified-badge {
+  background: rgba(0,196,100,0.15);
+  border-color: rgba(0,196,100,0.3);
+  color: #00d467;
+}
+
+/* ── Freshness Indicator ─────────────────────────────────────────────────── */
+.freshness-chip {
+  align-items: center;
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 0.68rem;
+  font-weight: 900;
+  gap: 0.28rem;
+  padding: 0.25rem 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.freshness-new {
+  background: rgba(37,99,235,0.1);
+  color: #2563eb;
+}
+
+.freshness-today {
+  background: rgba(0,196,100,0.1);
+  color: #00a855;
+}
+
+.freshness-recent {
+  background: rgba(245,158,11,0.1);
+  color: #b45309;
+}
+
+.freshness-old {
+  background: var(--bg2);
+  color: var(--muted);
+}
+
+/* ── Report Modal ────────────────────────────────────────────────────────── */
+.report-option {
+  align-items: center;
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  cursor: pointer;
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.9rem 1rem;
+  text-align: left;
+  transition: border-color 180ms ease, background 180ms ease;
+  width: 100%;
+}
+
+.report-option:hover,
+.report-option.selected {
+  background: rgba(239,68,68,0.06);
+  border-color: rgba(239,68,68,0.4);
+}
+
+/* ── Mobile Bottom Nav ───────────────────────────────────────────────────── */
+.bottom-nav {
+  background: color-mix(in srgb, var(--card) 92%, transparent);
+  backdrop-filter: blur(22px);
+  border-top: 1px solid var(--border);
+  bottom: 0;
+  display: flex;
+  left: 0;
+  position: fixed;
+  right: 0;
+  z-index: 60;
+}
+
+.bottom-nav-btn {
+  align-items: center;
+  color: var(--muted);
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  font-size: 0.65rem;
+  font-weight: 900;
+  gap: 0.22rem;
+  justify-content: center;
+  letter-spacing: 0.06em;
+  padding: 0.65rem 0 0.75rem;
+  text-transform: uppercase;
+  transition: color 180ms ease;
+}
+
+.bottom-nav-btn.active {
+  color: var(--accent);
+}
+
+/* ── Mobile UX Improvements ──────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* More breathing room at bottom for nav bar */
+  main {
+    padding-bottom: 4rem;
+  }
+
+  /* Larger touch targets on listing cards */
+  .listing-card .btn-ink,
+  .listing-card .icon-btn {
+    min-height: 3rem;
+  }
+
+  /* Scroll snap on category pills */
+  .category-scroll {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .category-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  .category-scroll .pill {
+    flex-shrink: 0;
+    scroll-snap-align: start;
+  }
+
+  /* Stack grid to 2 columns always on mobile */
+  .listing-grid-mobile {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.75rem !important;
+  }
+
+  .hero-search {
+    max-width: 100%;
+  }
+}
+
+/* iPad (768px – 1024px) */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .bottom-nav {
+    display: none; /* Use full header on iPad */
+  }
+
+  .floating-action {
+    bottom: 1.25rem;
+  }
+}
+

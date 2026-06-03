@@ -31,3 +31,15 @@ export function getDistanceInKm(lat1: number, lon1: number, lat2: number, lon2: 
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c; // Distance in km
 }
+
+/** Returns freshness label text + CSS variant class based on listing age */
+export function getFreshnessLabel(createdAt: string): { label: string; cls: string } {
+  const diffMs = Date.now() - new Date(createdAt).getTime();
+  const diffH = diffMs / 3_600_000;
+  if (diffH < 3)   return { label: "Just listed", cls: "freshness-today" };
+  if (diffH < 24)  return { label: "Today",       cls: "freshness-today" };
+  if (diffH < 72)  return { label: "This week",   cls: "freshness-recent" };
+  if (diffH < 168) return { label: "7 days ago",  cls: "freshness-recent" };
+  return { label: "Older",                         cls: "freshness-old" };
+}
+
