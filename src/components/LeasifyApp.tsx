@@ -687,7 +687,7 @@ export default function LeasifyApp() {
         userCoords={userCoords}
       />
 
-      <StartupSections onList={() => {
+      <StartupSections listings={listings} onList={() => {
         if (!currentUser) return setAuthMode("login");
         setShowListingForm(true);
       }} />
@@ -1318,7 +1318,7 @@ function ListingCard({
   );
 }
 
-function StartupSections({ onList }: { onList: () => void }) {
+function StartupSections({ onList, listings = [] }: { onList: () => void, listings?: any[] }) {
   const stats = [
     ["1,200+", "listed items"],
     ["8,500+", "members"],
@@ -1380,7 +1380,12 @@ function StartupSections({ onList }: { onList: () => void }) {
                   {index % 3 === 0 ? <Camera size={21} /> : index % 3 === 1 ? <Package size={21} /> : <Sparkles size={21} />}
                 </div>
                 <h3 className="text-lg font-black">{cat}</h3>
-                <p className="mt-1 text-sm text-[var(--muted)]">{72 + index * 13} items nearby</p>
+                <p className="mt-1 text-sm text-[var(--muted)]">
+                  {(() => {
+                    const count = listings.filter((l) => l.category === cat).length;
+                    return count === 1 ? "1 item nearby" : `${count} items nearby`;
+                  })()}
+                </p>
               </motion.div>
             ))}
           </div>
