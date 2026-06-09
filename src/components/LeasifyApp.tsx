@@ -533,6 +533,7 @@ export default function LeasifyApp() {
 
   return (
     <main className="min-h-screen overflow-hidden bg-[var(--bg)] text-[var(--text)]">
+      <SplashScreen />
       <CursorGlow />
       <AnimatedBackdrop />
       <Header
@@ -2453,3 +2454,60 @@ function Footer() {
     </footer>
   );
 }
+
+function SplashScreen() {
+  const [show, setShow] = useState(true);
+
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    const timer = setTimeout(() => {
+      setShow(false);
+      document.body.style.overflow = "";
+    }, 3000);
+    return () => {
+      clearTimeout(timer);
+      document.body.style.overflow = "";
+    };
+  }, []);
+
+  if (!show) return null;
+
+  return (
+    <motion.div
+      className="fixed inset-0 z-[999] flex items-center justify-center bg-[#111009]"
+      initial={{ y: 0 }}
+      animate={{ y: "-100vh", opacity: 0 }}
+      transition={{ delay: 2.2, duration: 0.8, ease: [0.76, 0, 0.24, 1] }}
+    >
+      <div className="flex items-end font-black text-6xl sm:text-8xl tracking-tight">
+        <div className="overflow-hidden pb-2 sm:pb-3">
+          <motion.div
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            transition={{ duration: 0.7, ease: [0.33, 1, 0.68, 1], delay: 0.2 }}
+            className="text-white"
+          >
+            Leas
+          </motion.div>
+        </div>
+        <div className="overflow-hidden pb-2 sm:pb-3">
+          <motion.div
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            transition={{ duration: 0.7, ease: [0.33, 1, 0.68, 1], delay: 0.35 }}
+            className="text-[var(--accent)]"
+          >
+            ify
+          </motion.div>
+        </div>
+        <motion.div
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.5, ease: "backOut", delay: 0.9 }}
+          className="ml-1.5 mb-5 sm:mb-8 h-3 w-3 sm:h-4 sm:w-4 rounded-full bg-[var(--accent)]"
+        />
+      </div>
+    </motion.div>
+  );
+}
+
