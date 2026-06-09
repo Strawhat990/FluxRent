@@ -97,18 +97,18 @@ export default function ListingFormModal({ currentUser, onClose, onCreate }: Pro
   }
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
       <form
-        className="modal-card w-full max-w-4xl max-h-[92vh] overflow-y-auto"
+        className="modal-card w-full max-w-4xl max-h-[95vh] sm:max-h-[92vh] overflow-y-auto rounded-t-[24px] sm:rounded-[28px]"
         onSubmit={handleSubmit}
         onClick={(e) => e.stopPropagation()}
       >
-        <button type="button" onClick={onClose} className="absolute right-5 top-5 icon-btn z-10">
+        <button type="button" onClick={onClose} className="absolute right-3 top-3 sm:right-5 sm:top-5 icon-btn z-10">
           <X size={18} />
         </button>
 
         <div className="section-eyebrow">List an item</div>
-        <h2 className="mt-2 text-3xl font-black mb-6">What are you renting out?</h2>
+        <h2 className="mt-2 text-2xl sm:text-3xl font-black mb-4 sm:mb-6">What are you renting out?</h2>
 
         <div className="grid gap-6 lg:grid-cols-2">
           {/* LEFT — Photos + Map */}
@@ -187,7 +187,7 @@ export default function ListingFormModal({ currentUser, onClose, onCreate }: Pro
             <label className="label">Item title <input className="input" name="title" placeholder="e.g. Sony A7 IV Camera Kit" required /></label>
             <label className="label">Description <textarea className="input min-h-[80px]" name="description" placeholder="What's included, condition, pickup instructions…" required /></label>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <label className="label">Category
                 <select className="input" name="category">
                   {categories.filter((c) => c !== "All").map((c) => <option key={c}>{c}</option>)}
@@ -225,7 +225,7 @@ export default function ListingFormModal({ currentUser, onClose, onCreate }: Pro
               <span className="text-xs text-[var(--muted)] mt-1 block">Anything you require before handing over the item. Leave blank if none.</span>
             </label>
 
-            <button type="submit" disabled={busy} className="btn-primary mt-2 h-12 w-full">
+            <button type="submit" disabled={busy} className="btn-primary mt-3 sm:mt-2 h-12 w-full">
               {busy ? <><Loader2 size={16} className="animate-spin" /> Publishing…</> : <><Upload size={16} />Publish listing</>}
             </button>
           </div>

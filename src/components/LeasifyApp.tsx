@@ -11,6 +11,7 @@ import {
   CalendarDays,
   Camera,
   Check,
+  ChevronLeft,
   ChevronRight,
   Clock,
   Filter,
@@ -558,16 +559,16 @@ export default function LeasifyApp() {
 
       <section id="browse" className="section-pad relative">
         <motion.div
-          className="mx-auto max-w-6xl rounded-[28px] border border-[var(--border)] bg-[var(--card)]/82 p-4 shadow-2xl shadow-black/5 backdrop-blur-2xl md:p-5"
+          className="mx-auto max-w-6xl rounded-[20px] sm:rounded-[28px] border border-[var(--border)] bg-[var(--card)]/82 p-3 sm:p-4 shadow-2xl shadow-black/5 backdrop-blur-2xl md:p-5"
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
         >
-          <div className="grid gap-3 lg:grid-cols-[1.2fr_0.7fr_0.7fr_auto]">
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1.2fr_0.7fr_0.7fr_auto]">
             <SearchField icon={<Search size={18} />} value={query} onChange={setQuery} placeholder="Search cameras, cars, tools..." />
             <SelectField value={category} onChange={setCategory} options={categories} icon={<Filter size={18} />} />
             <SelectField value={city} onChange={setCity} options={cities} icon={<MapPin size={18} />} />
-            <button className="btn-primary h-14 px-6">
+            <button className="btn-primary h-12 sm:h-14 px-6 w-full sm:w-auto">
               <SlidersHorizontal size={18} />
               Search
             </button>
@@ -599,7 +600,7 @@ export default function LeasifyApp() {
             </label>
           </div>
           
-          <div className="mt-4 grid gap-4 md:grid-cols-[1.2fr_0.8fr] md:items-end border-t border-[var(--border)]/60 pt-4">
+          <div className="mt-4 grid gap-4 grid-cols-1 md:grid-cols-[1.2fr_0.8fr] md:items-end border-t border-[var(--border)]/60 pt-4">
             <div>
               <div className="mb-2 flex items-center justify-between text-xs font-bold uppercase tracking-[0.18em] text-[var(--muted)]">
                 <span>Proximity Filter</span>
@@ -660,11 +661,11 @@ export default function LeasifyApp() {
           </div>
         </motion.div>
 
-        <div className="mx-auto mt-8 flex max-w-6xl flex-wrap gap-2">
+        <div className="mx-auto mt-6 sm:mt-8 max-w-6xl flex gap-2 overflow-x-auto pb-2 sm:pb-0 sm:flex-wrap scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
           {categories.map((cat) => (
             <button
               key={cat}
-              className={cn("pill", category === cat && "pill-active")}
+              className={cn("pill shrink-0", category === cat && "pill-active")}
               onClick={() => setCategory(cat)}
             >
               {cat}
@@ -875,10 +876,11 @@ function Header({
     <header className="fixed left-0 right-0 top-0 z-50 border-b border-[var(--border)] bg-[var(--bg)]/82 backdrop-blur-2xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 md:px-8">
         <a className="brand" href="#top" aria-label="Leasify home">
-          Rent<span>ify</span>
+          Leas<span>ify</span>
         </a>
         <nav className="hidden items-center gap-7 text-sm font-bold text-[var(--muted)] lg:flex">
           <a href="#browse">Browse</a>
+          <a href="/products" className="hover:text-[var(--text)] transition">Products</a>
           <a href="#trending">Trending</a>
           <a href="#categories">Categories</a>
           {isLoggedIn && currentUser && <button onClick={onDashboard}>Dashboard</button>}
@@ -928,6 +930,7 @@ function Header({
         <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onMobileMenu} />
         <nav className="absolute right-0 top-0 h-full w-72 bg-[var(--bg)] shadow-2xl flex flex-col p-6 gap-4 pt-20">
           <a href="#browse" className="text-lg font-bold py-2 border-b border-[var(--border)]" onClick={onMobileMenu}>Browse</a>
+          <a href="/products" className="text-lg font-bold py-2 border-b border-[var(--border)]" onClick={onMobileMenu}>Products</a>
           <a href="#trending" className="text-lg font-bold py-2 border-b border-[var(--border)]" onClick={onMobileMenu}>Trending</a>
           <a href="#categories" className="text-lg font-bold py-2 border-b border-[var(--border)]" onClick={onMobileMenu}>Categories</a>
           {isLoggedIn && currentUser && <button className="text-lg font-bold py-2 border-b border-[var(--border)] text-left" onClick={onDashboard}>Dashboard</button>}
@@ -967,7 +970,7 @@ function Hero({ onBrowse, onList, onSearch }: { onBrowse: () => void; onList: ()
   }
 
   return (
-    <section id="top" className="section-pad relative flex min-h-[92vh] items-center pt-32">
+    <section id="top" className="section-pad relative flex min-h-[80vh] sm:min-h-[92vh] items-center pt-24 sm:pt-32">
       <div className="relative z-10 mx-auto grid w-full max-w-7xl gap-10 lg:grid-cols-[1fr_0.62fr] lg:items-center">
         <motion.div initial="hidden" animate="show" variants={container}>
           <motion.div variants={item} className="hero-pill">
@@ -1003,7 +1006,7 @@ function Hero({ onBrowse, onList, onSearch }: { onBrowse: () => void; onList: ()
           </motion.div>
 
           <motion.div variants={item} className="mt-4 flex flex-wrap gap-3">
-            <button className="btn-secondary h-12 px-6" onClick={onList}>
+            <button className="btn-secondary h-11 sm:h-12 px-5 sm:px-6" onClick={onList}>
               <Upload size={16} />
               List an item
             </button>
@@ -1051,7 +1054,7 @@ function Hero({ onBrowse, onList, onSearch }: { onBrowse: () => void; onList: ()
 function Marquee() {
   const items = ["Cameras", "Cars", "Designer fashion", "Power tools", "Gaming", "Camping", "Audio", "Appliances"];
   return (
-    <div className="relative z-10 overflow-hidden border-y border-[var(--border)] bg-[var(--dark)] py-4 text-[var(--bg)]">
+    <div className="relative z-10 overflow-hidden border-y border-[var(--border)] bg-dark py-4 text-bg">
       <div className="marquee-track">
         {[...items, ...items, ...items].map((label, index) => (
           <span key={`${label}-${index}`} className="mx-7 inline-flex items-center gap-3 text-sm font-black uppercase tracking-[0.2em] opacity-70">
@@ -1126,44 +1129,55 @@ function Marketplace({
   userCoords: { lat: number; lng: number } | null;
 }) {
   const featured = listings.find((listing) => listing.featured) ?? listings[0];
+  const HOME_LIMIT = 8;
+  const displayListings = listings.slice(0, HOME_LIMIT);
+  const hasMore = listings.length > HOME_LIMIT;
 
   return (
     <section id="trending" className="section-pad relative z-10">
       <div className="mx-auto max-w-7xl">
         <SectionHeader eyebrow="Featured listings" title="Trending near you" action="Marketplace updated live" />
         {featured && (
-          <motion.article className="featured-listing" initial={{ opacity: 0, y: 28 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-            <div className="relative min-h-[320px] overflow-hidden rounded-[24px] lg:rounded-r-none">
-              <img src={featured.images[0]} alt={featured.title} className="h-full min-h-[320px] w-full object-cover" />
-              <div className="absolute left-5 top-5 rounded-full bg-white/88 px-4 py-2 text-xs font-black uppercase text-stone-950 backdrop-blur">
+          <motion.article className="featured-listing cursor-pointer" initial={{ opacity: 0, y: 28 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} onClick={() => onOpen(featured)}>
+            <div className="relative h-[180px] sm:h-[220px] lg:h-[260px] overflow-hidden rounded-t-[22px] sm:rounded-t-[24px] lg:rounded-r-none lg:rounded-l-[24px]">
+              <img src={featured.images[0]} alt={featured.title} className="h-full w-full object-cover transition-transform duration-700 hover:scale-105" />
+              <div className="absolute left-4 top-4 rounded-full bg-white/88 px-3 py-1.5 text-xs font-black uppercase text-stone-950 backdrop-blur">
                 {featured.badge}
               </div>
+              {featured.images.length > 1 && (
+                <div className="absolute bottom-3 right-3 rounded-full bg-black/60 px-2.5 py-1 text-xs font-bold text-white backdrop-blur">
+                  +{featured.images.length - 1} photos
+                </div>
+              )}
             </div>
-            <div className="p-6 md:p-10">
-              <div className="mb-3 flex flex-wrap gap-2">
+            <div className="p-4 sm:p-5 lg:p-6">
+              <div className="mb-2 flex flex-wrap gap-1.5">
                 <span className="mini-chip dark-chip">{featured.category}</span>
                 <span className="mini-chip dark-chip">{featured.area}</span>
-                <span className="mini-chip dark-chip">{featured.rating} stars</span>
+                <span className="mini-chip dark-chip">{featured.rating}★</span>
                 {userCoords && featured.lat !== undefined && featured.lng !== undefined && (
                   <span className="mini-chip bg-emerald-500/20 text-emerald-300 font-bold">
-                    {getDistanceInKm(userCoords.lat, userCoords.lng, Number(featured.lat), Number(featured.lng)).toFixed(1)} km away
+                    {getDistanceInKm(userCoords.lat, userCoords.lng, Number(featured.lat), Number(featured.lng)).toFixed(1)} km
                   </span>
                 )}
               </div>
-              <h3 className="text-3xl font-black md:text-5xl">{featured.title}</h3>
-              <p className="mt-4 max-w-2xl text-sm leading-7 text-white/62">{featured.description}</p>
-              <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
+              <h3 className="text-lg sm:text-2xl font-black lg:text-3xl line-clamp-1">{featured.title}</h3>
+              <p className="mt-1.5 max-w-2xl text-sm leading-6 text-white/55 line-clamp-2">{featured.description}</p>
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <div className="text-4xl font-black text-amber-300">{formatInr(featured.pricePerDay)}</div>
-                  <div className="text-sm text-white/45">per day plus {formatInr(featured.securityDeposit)} deposit</div>
+                  <div className="text-2xl sm:text-3xl font-black text-amber-300">{formatInr(featured.pricePerDay)}<span className="text-sm font-bold text-white/40 ml-1">/day</span></div>
                 </div>
                 <div className="flex gap-2">
-                  <button className="btn-light" onClick={() => onChat(featured)}>
-                    <MessageCircle size={17} />
-                    Chat
+                  {featured.phone && (
+                    <button className="btn-light" onClick={(e) => { e.stopPropagation(); alert(`Phone: ${featured.phone}`); }}>
+                      <Phone size={15} /> {featured.phone}
+                    </button>
+                  )}
+                  <button className="btn-light" onClick={(e) => { e.stopPropagation(); onChat(featured); }}>
+                    <MessageCircle size={15} /> Chat
                   </button>
-                  <button className="btn-primary" onClick={() => onBooking(featured)}>
-                    Request rental
+                  <button className="btn-primary" onClick={(e) => { e.stopPropagation(); onBooking(featured); }}>
+                    Rent now
                   </button>
                 </div>
               </div>
@@ -1171,8 +1185,8 @@ function Marketplace({
           </motion.article>
         )}
 
-        <motion.div className="mt-7 grid gap-5 sm:grid-cols-2 xl:grid-cols-4" variants={container} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-80px" }}>
-          {listings.map((listing) => (
+        <motion.div className="mt-7 grid gap-4 sm:gap-5 grid-cols-1 sm:grid-cols-2 md:grid-cols-2 xl:grid-cols-4" variants={container} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-80px" }}>
+          {displayListings.map((listing) => (
             <ListingCard
               key={listing.id}
               listing={listing}
@@ -1185,6 +1199,16 @@ function Marketplace({
             />
           ))}
         </motion.div>
+
+        {hasMore && (
+          <div className="mt-8 text-center">
+            <a href="/products" className="btn-ink inline-flex h-12 px-8 gap-2 items-center">
+              View all {listings.length} products
+              <ChevronRight size={16} />
+            </a>
+          </div>
+        )}
+
         {listings.length === 0 && (
           <EmptyState title="No rentals match these filters" body="Try widening your price, city, category, or availability filters." />
         )}
@@ -1214,66 +1238,80 @@ function ListingCard({
   const isOwnerVerified = listing.ownerRating >= 4.5 && listing.reviewCount >= 5;
 
   return (
-    <motion.article variants={item} className="listing-card">
+    <motion.article variants={item} className="listing-card group">
       <button className="absolute inset-0 z-0" onClick={onOpen} aria-label={`Open ${listing.title}`} />
-      <div className="relative">
-        <img className="h-56 w-full object-cover transition duration-500 group-hover:scale-105" src={listing.images[0]} alt={listing.title} />
+      {/* Image section */}
+      <div className="relative overflow-hidden">
+        <img className="h-44 sm:h-48 w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110" src={listing.images[0]} alt={listing.title} />
+        {/* Gradient overlay on hover */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        {/* Badge */}
         {listing.badge && (
-          <div className="absolute left-4 top-4 rounded-full border border-white/45 bg-white/80 px-3 py-1 text-xs font-black backdrop-blur">
+          <div className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider backdrop-blur-md shadow-sm">
             {listing.badge}
           </div>
         )}
-        {/* Freshness chip on image */}
-        <div className={`freshness-chip absolute bottom-3 left-3 ${freshness.cls}`}>
-          <Clock size={9} />
-          {freshness.label}
+        {/* Photo count */}
+        {listing.images.length > 1 && (
+          <div className="absolute left-3 bottom-3 rounded-full bg-black/50 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm">
+            {listing.images.length} photos
+          </div>
+        )}
+        {/* Freshness */}
+        <div className={`freshness-chip absolute bottom-3 right-12 ${freshness.cls}`}>
+          <Clock size={8} />{freshness.label}
         </div>
-        <button className={cn("heart-btn", favorite && "heart-active")} onClick={onFavorite} aria-label="Save listing">
-          <Heart size={17} fill={favorite ? "currentColor" : "none"} />
+        {/* Wishlist heart */}
+        <button
+          className={cn("heart-btn transition-transform duration-200 hover:scale-110", favorite && "heart-active")}
+          onClick={onFavorite}
+          aria-label={favorite ? "Remove from wishlist" : "Add to wishlist"}
+        >
+          <Heart size={15} fill={favorite ? "currentColor" : "none"} className={favorite ? "animate-pulse" : ""} />
         </button>
+        {/* Hover action overlay */}
+        <div className="absolute bottom-0 left-0 right-0 p-3 flex gap-1.5 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out z-10">
+          {listing.phone && (
+            <button className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-emerald-500/90 backdrop-blur-sm py-2 text-xs font-black text-white hover:bg-emerald-500 transition" onClick={(e) => { e.stopPropagation(); alert(`Phone: ${listing.phone}`); }}>
+              <Phone size={12} /> Call
+            </button>
+          )}
+          <button className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-white/90 backdrop-blur-sm py-2 text-xs font-black text-stone-900 hover:bg-white transition" onClick={onChat}>
+            <MessageCircle size={12} /> Chat
+          </button>
+        </div>
       </div>
-      <div className="relative z-10 p-5">
-        <div className="mb-2 flex items-center justify-between gap-3 text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
+      {/* Content section */}
+      <div className="relative z-10 p-3.5 sm:p-4">
+        <div className="flex items-center justify-between text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[var(--muted)]">
           <span>{listing.category}</span>
-          <span className="inline-flex items-center gap-1">
-            <Star size={13} className="fill-amber-400 text-amber-400" />
+          <span className="inline-flex items-center gap-0.5">
+            <Star size={11} className="fill-amber-400 text-amber-400" />
             {listing.rating}
           </span>
         </div>
-        <h3 className="line-clamp-1 text-xl font-black">{listing.title}</h3>
-        <div className="mt-2 flex items-center justify-between text-sm text-[var(--muted)]">
-          <div className="flex items-center gap-2">
-            <MapPin size={15} />
-            <span className="line-clamp-1">{listing.area}, {listing.city}</span>
-          </div>
+        <h3 className="mt-1 line-clamp-1 text-base sm:text-lg font-black group-hover:text-[var(--accent)] transition-colors duration-200">{listing.title}</h3>
+        <div className="mt-1.5 flex items-center gap-1.5 text-xs text-[var(--muted)]">
+          <MapPin size={12} />
+          <span className="line-clamp-1">{listing.area}, {listing.city}</span>
           {userCoords && listing.lat !== undefined && listing.lng !== undefined && (
-            <span className="text-xs font-bold text-emerald-400 whitespace-nowrap">
-              {getDistanceInKm(userCoords.lat, userCoords.lng, Number(listing.lat), Number(listing.lng)).toFixed(1)} km away
+            <span className="ml-auto text-[10px] font-bold text-emerald-400 whitespace-nowrap">
+              {getDistanceInKm(userCoords.lat, userCoords.lng, Number(listing.lat), Number(listing.lng)).toFixed(1)} km
             </span>
           )}
         </div>
-        <div className="mt-5 flex items-end justify-between border-t border-[var(--border)] pt-4">
+        <div className="mt-3 flex items-end justify-between border-t border-[var(--border)] pt-3">
           <div>
-            <div className="text-2xl font-black">{formatInr(listing.pricePerDay)}</div>
-            <div className="text-xs font-bold text-[var(--muted)]">per day</div>
+            <div className="text-lg sm:text-xl font-black">{formatInr(listing.pricePerDay)}</div>
+            <div className="text-[10px] font-bold text-[var(--muted)]">per day</div>
           </div>
-          <div className="text-right text-xs text-[var(--muted)]">
-            <div className="flex items-center justify-end gap-1.5 font-black text-[var(--text)]">
+          <div className="text-right">
+            <div className="flex items-center justify-end gap-1 text-xs font-black text-[var(--text)]">
               {listing.ownerName}
-              {isOwnerVerified && (
-                <ShieldCheck size={13} className="text-emerald-500" />
-              )}
+              {isOwnerVerified && <ShieldCheck size={11} className="text-emerald-500" />}
             </div>
-            <div>{listing.reviewCount} reviews</div>
+            <div className="text-[10px] text-[var(--muted)]">{listing.reviewCount} reviews</div>
           </div>
-        </div>
-        <div className="mt-4 flex gap-2">
-          <button className="btn-ink flex-1" onClick={onBooking}>
-            Rent
-          </button>
-          <button className="icon-btn" onClick={onChat} aria-label="Message owner">
-            <MessageCircle size={17} />
-          </button>
         </div>
       </div>
     </motion.article>
@@ -1291,10 +1329,10 @@ function StartupSections({ onList }: { onList: () => void }) {
 
   return (
     <>
-      <section className="section-pad relative z-10 bg-[var(--dark)] text-[var(--bg)]">
+      <section className="section-pad relative z-10 bg-dark text-bg">
         <div className="mx-auto max-w-7xl">
           <SectionHeader eyebrow="How it works" title="Manual rentals, real conversation, zero payment gateway for now" inverse />
-          <div className="grid gap-px overflow-hidden rounded-[28px] border border-white/10 bg-white/10 md:grid-cols-3">
+          <div className="grid gap-px overflow-hidden rounded-[20px] sm:rounded-[28px] border border-[var(--border)] bg-[var(--border)] md:grid-cols-3">
             {[
               ["01", "Find the right item", "Search by keyword, city, category, budget, and availability."],
               ["02", "Chat and request", "Message the owner, negotiate handover, then send a date-based request."],
@@ -1302,25 +1340,25 @@ function StartupSections({ onList }: { onList: () => void }) {
             ].map(([num, title, body]) => (
               <motion.div
                 key={title}
-                className="bg-[var(--dark)] p-8"
+                className="bg-dark p-6 sm:p-8"
                 initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
               >
-                <div className="text-6xl font-black text-white/8">{num}</div>
-                <h3 className="mt-4 text-2xl font-black">{title}</h3>
-                <p className="mt-3 text-sm leading-7 text-white/50">{body}</p>
+                <div className="text-5xl sm:text-6xl font-black text-bg opacity-10">{num}</div>
+                <h3 className="mt-3 sm:mt-4 text-xl sm:text-2xl font-black text-bg">{title}</h3>
+                <p className="mt-2 sm:mt-3 text-sm leading-6 sm:leading-7 text-bg opacity-50">{body}</p>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="grid bg-orange-600 text-white md:grid-cols-4">
+      <section className="grid grid-cols-2 bg-orange-600 text-white md:grid-cols-4">
         {stats.map(([value, label]) => (
-          <div key={label} className="border-b border-white/15 p-8 text-center md:border-r">
-            <div className="text-4xl font-black">{value}</div>
-            <div className="mt-1 text-sm font-bold uppercase tracking-[0.18em] text-white/70">{label}</div>
+          <div key={label} className="border-b border-white/15 p-5 sm:p-8 text-center md:border-r">
+            <div className="text-2xl sm:text-4xl font-black">{value}</div>
+            <div className="mt-1 text-xs sm:text-sm font-bold uppercase tracking-[0.14em] sm:tracking-[0.18em] text-white/70">{label}</div>
           </div>
         ))}
       </section>
@@ -1328,7 +1366,7 @@ function StartupSections({ onList }: { onList: () => void }) {
       <section id="categories" className="section-pad relative z-10">
         <div className="mx-auto max-w-7xl">
           <SectionHeader eyebrow="Explore" title="Popular categories" action="Trending, nearby, and recently added" />
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
             {cats.map((cat, index) => (
               <motion.div
                 key={cat}
@@ -1350,10 +1388,10 @@ function StartupSections({ onList }: { onList: () => void }) {
       </section>
 
       <section className="section-pad relative z-10">
-        <div className="mx-auto grid max-w-7xl gap-8 rounded-[32px] border border-[var(--border)] bg-[var(--bg2)] p-6 md:grid-cols-[1fr_0.9fr] md:p-12">
+        <div className="mx-auto grid max-w-7xl gap-6 sm:gap-8 rounded-[22px] sm:rounded-[32px] border border-[var(--border)] bg-[var(--bg2)] p-4 sm:p-6 md:grid-cols-[1fr_0.9fr] md:p-12">
           <div>
             <div className="section-eyebrow">For owners</div>
-            <h2 className="mt-3 text-4xl font-black md:text-6xl">
+            <h2 className="mt-3 text-2xl sm:text-4xl font-black md:text-6xl">
               Turn idle items into income.
             </h2>
             <p className="mt-5 max-w-xl text-[var(--muted)]">
@@ -1437,12 +1475,12 @@ function Dashboard({
     <section id="dashboard" className="section-pad relative z-10 bg-[var(--bg2)]">
       <div className="mx-auto max-w-7xl">
         <SectionHeader eyebrow="Dashboard" title="Operate your Leasify marketplace" action={`${favorites.length} saved items`} />
-        <div className="grid gap-5 lg:grid-cols-[280px_1fr]">
-          <aside className="glass-panel h-fit p-4">
-            <div className="mb-4 flex items-center gap-3 rounded-2xl bg-[var(--dark)] p-4 text-[var(--bg)]">
+        <div className="grid gap-4 sm:gap-5 lg:grid-cols-[280px_1fr]">
+          <aside className="glass-panel h-fit p-3 sm:p-4">
+            <div className="mb-3 sm:mb-4 flex items-center gap-3 rounded-2xl bg-dark p-3 sm:p-4 text-bg">
               <div className="avatar-big">{user.avatar}</div>
-              <div>
-                <div className="font-black">{user.name}</div>
+              <div className="min-w-0">
+                <div className="font-black truncate">{user.name}</div>
                 <div className="flex items-center gap-1 text-xs text-white/60">
                   <Star size={12} className="fill-amber-300 text-amber-300" />
                   {user.rating} rating
@@ -1450,11 +1488,11 @@ function Dashboard({
                 </div>
               </div>
             </div>
-            <div className="grid gap-2">
+            <div className="flex gap-2 overflow-x-auto pb-1 lg:grid lg:overflow-visible lg:pb-0" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
               {tabs.map(([id, icon, label]) => (
-                <button key={id} className={cn("dash-tab", tab === id && "dash-tab-active")} onClick={() => setTab(id)}>
+                <button key={id} className={cn("dash-tab shrink-0 lg:shrink", tab === id && "dash-tab-active")} onClick={() => setTab(id)}>
                   {icon}
-                  {label}
+                  <span className="hidden sm:inline lg:inline">{label}</span>
                 </button>
               ))}
             </div>
@@ -1462,7 +1500,7 @@ function Dashboard({
           <div className="min-h-[520px]">
             {tab === "overview" && (
               <div className="grid gap-5">
-                <div className="grid gap-4 md:grid-cols-4">
+                <div className="grid gap-3 sm:gap-4 grid-cols-2 md:grid-cols-4">
                   <Metric label="Active listings" value={String(myListings.length)} />
                   <Metric label="Bookings" value={String(bookings.length)} />
                   <Metric label="Unread alerts" value={String(notifications.filter((n) => !n.read).length)} />
@@ -1659,19 +1697,19 @@ function MessagesPanel({
   const listing = listings.find((item) => item.id === selected.listingId);
 
   return (
-    <div className="grid overflow-hidden rounded-[28px] border border-[var(--border)] bg-[var(--card)] lg:grid-cols-[280px_1fr]">
-      <div className="border-b border-[var(--border)] p-3 lg:border-b-0 lg:border-r">
+    <div className="grid overflow-hidden rounded-[20px] sm:rounded-[28px] border border-[var(--border)] bg-[var(--card)] lg:grid-cols-[280px_1fr]">
+      <div className="border-b border-[var(--border)] p-2 sm:p-3 lg:border-b-0 lg:border-r flex gap-2 overflow-x-auto lg:block lg:overflow-visible" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
         {threads.map((thread) => {
           const threadListing = listings.find((item) => item.id === thread.listingId);
           return (
-            <button key={thread.id} className={cn("thread-btn", selected.id === thread.id && "thread-btn-active")} onClick={() => setSelectedId(thread.id)}>
+            <button key={thread.id} className={cn("thread-btn shrink-0 lg:shrink", selected.id === thread.id && "thread-btn-active")} onClick={() => setSelectedId(thread.id)}>
               <MessageCircle size={16} />
               <span className="line-clamp-1">{threadListing?.title ?? "Rental chat"}</span>
             </button>
           );
         })}
       </div>
-      <div className="flex min-h-[520px] flex-col">
+      <div className="flex min-h-[360px] sm:min-h-[520px] flex-col">
         <div className="border-b border-[var(--border)] p-4">
           <div className="font-black">{listing?.title ?? "Rental chat"}</div>
           <div className="text-sm text-[var(--muted)]">Real-time ready chat, saved locally until Supabase keys are added.</div>
@@ -1853,7 +1891,7 @@ function AuthModal({
 
   return (
     <Modal onClose={onClose}>
-      <form className="modal-card max-w-md" onSubmit={handleSubmit}>
+      <form className="modal-card max-w-md w-full" onSubmit={handleSubmit}>
         <ModalClose onClose={onClose} />
         <div className="mb-6">
           <div className="section-eyebrow">{isSupabaseConfigured() ? "Secure auth" : "Demo auth"}</div>
@@ -1966,6 +2004,7 @@ function ListingDetailModal({
 }) {
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportReason, setReportReason] = useState("");
+  const [activeImg, setActiveImg] = useState(0);
   const freshness = getFreshnessLabel(listing.createdAt);
   const isOwnerVerified = listing.ownerRating >= 4.5 && listing.reviewCount >= 5;
 
@@ -1990,12 +2029,30 @@ function ListingDetailModal({
 
   return (
     <Modal onClose={onClose}>
-      <div className="modal-card max-w-5xl">
+      <div className="modal-card max-w-5xl w-full max-h-[90vh] overflow-y-auto">
         <ModalClose onClose={onClose} />
-        <div className="grid gap-6 lg:grid-cols-[1fr_0.8fr]">
-          {/* Left: image */}
-          <div className="overflow-hidden rounded-[26px]">
-            <img src={listing.images[0]} alt={listing.title} className="h-full min-h-[240px] w-full object-cover lg:min-h-[420px]" />
+        <div className="grid gap-4 sm:gap-6 lg:grid-cols-[1fr_0.8fr]">
+          {/* Left: image gallery */}
+          <div>
+            <div className="relative overflow-hidden rounded-[20px] sm:rounded-[26px]">
+              <img src={listing.images[activeImg]} alt={listing.title} className="h-full min-h-[180px] sm:min-h-[240px] w-full object-cover lg:min-h-[380px]" />
+              {listing.images.length > 1 && (
+                <>
+                  <button className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-1.5 text-white backdrop-blur hover:bg-black/70 transition" onClick={() => setActiveImg((i) => (i - 1 + listing.images.length) % listing.images.length)}><ChevronLeft size={18} /></button>
+                  <button className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-1.5 text-white backdrop-blur hover:bg-black/70 transition" onClick={() => setActiveImg((i) => (i + 1) % listing.images.length)}><ChevronRight size={18} /></button>
+                  <div className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-black/50 px-2.5 py-1 text-xs font-bold text-white backdrop-blur">{activeImg + 1}/{listing.images.length}</div>
+                </>
+              )}
+            </div>
+            {listing.images.length > 1 && (
+              <div className="mt-2 flex gap-1.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+                {listing.images.map((img, i) => (
+                  <button key={i} onClick={() => setActiveImg(i)} className={`shrink-0 h-14 w-14 sm:h-16 sm:w-16 rounded-xl overflow-hidden border-2 transition ${i === activeImg ? 'border-[var(--accent)]' : 'border-transparent opacity-60 hover:opacity-100'}`}>
+                    <img src={img} alt="" className="h-full w-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Right: details */}
@@ -2011,7 +2068,7 @@ function ListingDetailModal({
               </span>
             </div>
 
-            <h2 className="mt-4 text-3xl font-black lg:text-4xl">{listing.title}</h2>
+            <h2 className="mt-3 sm:mt-4 text-xl sm:text-3xl font-black lg:text-4xl">{listing.title}</h2>
             <p className="mt-3 leading-7 text-[var(--muted)]">{listing.description}</p>
 
             {/* Phone & Security remarks */}
@@ -2080,13 +2137,17 @@ function ListingDetailModal({
               </div>
             </div>
 
-            {/* Action buttons */}
-            <div className="mt-5 flex flex-wrap gap-2">
-              <button className="btn-primary" onClick={onBooking}>Request rental</button>
-              <button className="btn-secondary" onClick={onChat}><MessageCircle size={16} /> Chat</button>
-              <button className="btn-secondary" onClick={onFavorite}><Heart size={16} fill={favorite ? "currentColor" : "none"} /> Save</button>
-              <button className="btn-secondary" onClick={handleShare}><Share2 size={16} /> Share</button>
-              <button className="btn-danger" onClick={() => setShowReportModal(true)}><Flag size={14} /> Report</button>
+            {/* Action buttons — Contact first (this is a listing platform) */}
+            <div className="mt-4 sm:mt-5 grid grid-cols-2 gap-2">
+              {listing.phone && (
+                <button className="btn-primary col-span-2 h-11 justify-center gap-2" onClick={() => alert(`Owner's Phone: ${listing.phone}`)}>
+                  <Phone size={16} /> {listing.phone}
+                </button>
+              )}
+              <button className="btn-secondary h-10 justify-center" onClick={onChat}><MessageCircle size={15} /> Chat</button>
+              <button className="btn-secondary h-10 justify-center" onClick={onFavorite}><Heart size={15} fill={favorite ? "currentColor" : "none"} /> {favorite ? "Saved" : "Wishlist"}</button>
+              <button className="btn-secondary h-10 justify-center" onClick={handleShare}><Share2 size={15} /> Share</button>
+              <button className="btn-danger h-10 justify-center" onClick={() => setShowReportModal(true)}><Flag size={14} /> Report</button>
             </div>
 
             {/* Reviews */}
@@ -2282,12 +2343,12 @@ function ReviewQuickAdd({
 
 function SectionHeader({ eyebrow, title, action, inverse = false }: { eyebrow: string; title: string; action?: string; inverse?: boolean }) {
   return (
-    <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+    <div className="mb-6 sm:mb-8 flex flex-wrap items-end justify-between gap-4">
       <div>
         <div className="section-eyebrow">{eyebrow}</div>
-        <h2 className={cn("mt-2 max-w-3xl text-4xl font-black md:text-5xl", inverse && "text-white")}>{title}</h2>
+        <h2 className={cn("mt-2 max-w-3xl text-3xl sm:text-4xl font-black md:text-5xl", inverse && "text-bg")}>{title}</h2>
       </div>
-      {action && <div className={cn("text-sm font-bold text-[var(--muted)]", inverse && "text-white/45")}>{action}</div>}
+      {action && <div className={cn("text-xs sm:text-sm font-bold", inverse ? "text-bg opacity-45" : "text-muted")}>{action}</div>}
     </div>
   );
 }
@@ -2337,8 +2398,8 @@ function SelectNative({ name, options }: { name: string; options: string[] }) {
 
 function Modal({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   return (
-    <motion.div className="fixed inset-0 z-[80] flex items-center justify-center overflow-y-auto bg-black/45 p-4 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onMouseDown={onClose}>
-      <motion.div initial={{ opacity: 0, y: 26, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20, scale: 0.97 }} onMouseDown={(event) => event.stopPropagation()} className="w-full">
+    <motion.div className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center overflow-y-auto bg-black/45 p-2 sm:p-4 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onMouseDown={onClose}>
+      <motion.div initial={{ opacity: 0, y: 26, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20, scale: 0.97 }} onMouseDown={(event) => event.stopPropagation()} className="w-full max-h-[95vh] sm:max-h-none">
         {children}
       </motion.div>
     </motion.div>
@@ -2355,7 +2416,7 @@ function ModalClose({ onClose }: { onClose: () => void }) {
 
 function Toast({ message }: { message: string }) {
   return (
-    <motion.div className="fixed bottom-6 left-1/2 z-[100] -translate-x-1/2 rounded-full bg-[var(--dark)] px-5 py-3 text-sm font-black text-[var(--bg)] shadow-2xl" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}>
+    <motion.div className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] sm:bottom-6 left-1/2 z-[100] -translate-x-1/2 rounded-full bg-dark px-4 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-black text-bg shadow-2xl max-w-[90vw] text-center" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}>
       {message}
     </motion.div>
   );
@@ -2363,11 +2424,11 @@ function Toast({ message }: { message: string }) {
 
 function Footer() {
   return (
-    <footer className="relative z-10 bg-[var(--dark)] px-4 py-12 text-[var(--bg)] md:px-8">
-      <div className="mx-auto grid max-w-7xl gap-8 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
-        <div>
-          <div className="brand text-[var(--bg)]">Rent<span>ify</span></div>
-          <p className="mt-4 max-w-sm text-sm leading-7 text-white/45">
+    <footer className="relative z-10 bg-dark px-4 py-8 sm:py-12 text-bg md:px-8 pb-[calc(5rem+env(safe-area-inset-bottom,0px))] md:pb-12">
+      <div className="mx-auto grid max-w-7xl gap-6 sm:gap-8 grid-cols-2 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
+        <div className="col-span-2 md:col-span-1">
+          <div className="brand text-[var(--bg)]">Leas<span>ify</span></div>
+          <p className="mt-3 sm:mt-4 max-w-sm text-xs sm:text-sm leading-6 sm:leading-7 text-white/45">
             A polished, Supabase-ready rental marketplace MVP with auth, profiles, listings, chat, bookings, saved items,
             reviews, notifications, and admin moderation.
           </p>
