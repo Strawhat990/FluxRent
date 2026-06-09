@@ -4,7 +4,7 @@ export const demoUsers: UserProfile[] = [
   {
     id: "user-rhea",
     name: "Rhea Malhotra",
-    email: "rhea@rentify.test",
+    email: "rhea@leasify.test",
     city: "Bangalore",
     bio: "Weekend creator, careful renter, and camera gear obsessive.",
     avatar: "RM",
@@ -18,7 +18,7 @@ export const demoUsers: UserProfile[] = [
   {
     id: "user-arjun",
     name: "Arjun Kapur",
-    email: "arjun@rentify.test",
+    email: "arjun@leasify.test",
     city: "Bangalore",
     bio: "Photography studio owner. I rent clean, tested equipment with flexible pickup.",
     avatar: "AK",
@@ -32,7 +32,7 @@ export const demoUsers: UserProfile[] = [
   {
     id: "user-priya",
     name: "Priya Shah",
-    email: "priya@rentify.test",
+    email: "priya@leasify.test",
     city: "Bangalore",
     bio: "Designer wardrobe curator with event-ready outfits and jewelry.",
     avatar: "PS",
@@ -45,8 +45,8 @@ export const demoUsers: UserProfile[] = [
   },
   {
     id: "user-admin",
-    name: "Rentify Admin",
-    email: "admin@rentify.test",
+    name: "Leasify Admin",
+    email: "admin@leasify.test",
     city: "Bangalore",
     bio: "Marketplace operations and trust team.",
     avatar: "RA",

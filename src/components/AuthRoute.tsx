@@ -17,7 +17,7 @@ export default function AuthRoute({ mode }: { mode: Mode }) {
     const data = new FormData(event.currentTarget);
     const email = String(data.get("email") ?? "");
     const password = String(data.get("password") ?? "");
-    const name = String(data.get("name") ?? "Rentify User");
+    const name = String(data.get("name") ?? "Leasify User");
 
     try {
       if (mode === "forgot") {
@@ -25,7 +25,7 @@ export default function AuthRoute({ mode }: { mode: Mode }) {
         setMessage("Password reset flow started.");
       } else if (mode === "signup") {
         await signUpWithEmail(email, password, name);
-        setMessage("Account created. You can now continue into Rentify.");
+        setMessage("Account created. You can now continue into Leasify.");
       } else {
         await signInWithEmail(email, password);
         setMessage("Logged in. Session persistence is handled by Supabase when configured.");

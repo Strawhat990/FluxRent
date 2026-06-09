@@ -134,8 +134,8 @@ function usePersistedState<T>(key: string, initial: T) {
   return [value, setValue] as const;
 }
 
-export default function RentifyApp() {
-  const [theme, setTheme] = usePersistedState<"light" | "dark">("rentify-theme", "light");
+export default function LeasifyApp() {
+  const [theme, setTheme] = usePersistedState<"light" | "dark">("leasify-theme", "light");
   const [listings, setListings] = useState<Listing[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [threads, setThreads] = useState<Thread[]>([]);
@@ -874,7 +874,7 @@ function Header({
     <>
     <header className="fixed left-0 right-0 top-0 z-50 border-b border-[var(--border)] bg-[var(--bg)]/82 backdrop-blur-2xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 md:px-8">
-        <a className="brand" href="#top" aria-label="Rentify home">
+        <a className="brand" href="#top" aria-label="Leasify home">
           Rent<span>ify</span>
         </a>
         <nav className="hidden items-center gap-7 text-sm font-bold text-[var(--muted)] lg:flex">
@@ -1436,7 +1436,7 @@ function Dashboard({
   return (
     <section id="dashboard" className="section-pad relative z-10 bg-[var(--bg2)]">
       <div className="mx-auto max-w-7xl">
-        <SectionHeader eyebrow="Dashboard" title="Operate your Rentify marketplace" action={`${favorites.length} saved items`} />
+        <SectionHeader eyebrow="Dashboard" title="Operate your Leasify marketplace" action={`${favorites.length} saved items`} />
         <div className="grid gap-5 lg:grid-cols-[280px_1fr]">
           <aside className="glass-panel h-fit p-4">
             <div className="mb-4 flex items-center gap-3 rounded-2xl bg-[var(--dark)] p-4 text-[var(--bg)]">
@@ -1827,7 +1827,7 @@ function AuthModal({
     const data = new FormData(event.currentTarget);
     const email = String(data.get("email") ?? "");
     const password = String(data.get("password") ?? "");
-    const name = String(data.get("name") ?? "Rentify User");
+    const name = String(data.get("name") ?? "Leasify User");
 
     try {
       if (mode === "forgot") {
@@ -1838,7 +1838,7 @@ function AuthModal({
         notify(isSupabaseConfigured() ? "Account created! Check your email to confirm." : "Demo account created locally.");
       } else {
         await signInWithEmail(email, password);
-        // Profile will be set by the auth state listener in RentifyApp
+        // Profile will be set by the auth state listener in LeasifyApp
         notify(isSupabaseConfigured() ? "Logged in successfully!" : "Demo login complete.");
       }
       onClose();
@@ -1970,7 +1970,7 @@ function ListingDetailModal({
 
   function handleShare() {
     const url = window.location.href;
-    const text = `${listing.title} — ₹${listing.pricePerDay}/day on Rentify`;
+    const text = `${listing.title} — ₹${listing.pricePerDay}/day on Leasify`;
     if (navigator.share) {
       navigator.share({ title: listing.title, text, url }).catch(() => {});
     } else {

@@ -1,5 +1,5 @@
-import RentifyApp from "@/components/RentifyApp";
+import LeasifyApp from "@/components/LeasifyApp";
 
 export default function Home() {
-  return <RentifyApp />;
+  return <LeasifyApp />;
 }
