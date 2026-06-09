@@ -45,7 +45,7 @@ export default function AuthRoute({ mode }: { mode: Mode }) {
           {mode === "login" ? "Log in" : mode === "signup" ? "Sign up" : "Forgot password"}
         </h1>
         <p className="mt-2 text-sm text-[var(--muted)]">
-          Supabase Auth is wired for email and Google. Without env keys, this page safely simulates the flow.
+          Sign in or create an account to start renting items and messaging owners.
         </p>
         {mode === "signup" && (
           <label className="label mt-5">
@@ -55,12 +55,12 @@ export default function AuthRoute({ mode }: { mode: Mode }) {
         )}
         <label className="label mt-4">
           Email
-          <input className="input" name="email" type="email" defaultValue="rhea@rentify.test" required />
+          <input className="input" name="email" type="email" required />
         </label>
         {mode !== "forgot" && (
           <label className="label mt-4">
             Password
-            <input className="input" name="password" type="password" defaultValue="rentify123" required />
+            <input className="input" name="password" type="password" required />
           </label>
         )}
         {message && <div className="mt-4 rounded-xl bg-orange-500/10 p-3 text-sm font-bold text-orange-600">{message}</div>}

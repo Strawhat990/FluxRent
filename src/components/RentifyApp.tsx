@@ -75,6 +75,7 @@ import {
   updateProfile,
   triggerEmailNotification,
   fetchProfiles,
+  fetchReviews,
   updateProfileBannedStatus,
 } from "@/lib/supabase";
 import ListingFormModal from "./ListingFormModal";
@@ -135,13 +136,13 @@ function usePersistedState<T>(key: string, initial: T) {
 
 export default function RentifyApp() {
   const [theme, setTheme] = usePersistedState<"light" | "dark">("rentify-theme", "light");
-  const [listings, setListings] = useState<Listing[]>(demoListings);
+  const [listings, setListings] = useState<Listing[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [threads, setThreads] = useState<Thread[]>([]);
-  const [reviews, setReviews] = useState<Review[]>(demoReviews);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [users, setUsers] = useState<UserProfile[]>(demoUsers);
-  const [currentUser, setCurrentUser] = useState<UserProfile>(demoUsers[0]);
+  const [users, setUsers] = useState<UserProfile[]>([]);
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [query, setQuery] = useState("");
@@ -191,17 +192,18 @@ export default function RentifyApp() {
     document.documentElement.classList.toggle("dark", theme === "dark");
   }, [theme]);
 
-  // Fetch public listings on mount
+  // Fetch public listings & reviews on mount
   useEffect(() => {
     if (!isSupabaseConfigured()) return;
     fetchListings().then((data) => { if (data.length > 0) setListings(data); });
+    fetchReviews().then((data) => { if (data.length > 0) setReviews(data); });
   }, []);
 
   // Fetch all profiles for admin view
   useEffect(() => {
-    if (!isSupabaseConfigured() || currentUser.role !== "admin") return;
+    if (!isSupabaseConfigured() || currentUser?.role !== "admin") return;
     fetchProfiles().then(setUsers);
-  }, [currentUser.role]);
+  }, [currentUser?.role]);
 
   // Auth state listener – load personal data on sign in
   useEffect(() => {
@@ -235,7 +237,7 @@ export default function RentifyApp() {
         setThreads(myThreads);
         setNotifications(myNotifs);
       } else if (event === 'SIGNED_OUT') {
-        setCurrentUser(demoUsers[0]);
+        setCurrentUser(null);
         setIsLoggedIn(false);
         setFavorites([]);
         setBookings([]);
@@ -248,7 +250,7 @@ export default function RentifyApp() {
 
   // Realtime messages and threads listener
   useEffect(() => {
-    if (!isLoggedIn || !isSupabaseConfigured()) return;
+    if (!isLoggedIn || !isSupabaseConfigured() || !currentUser) return;
     const sb = getSupabaseBrowserClient();
     if (!sb) return;
 
@@ -313,7 +315,7 @@ export default function RentifyApp() {
       sb.removeChannel(messagesChannel);
       sb.removeChannel(threadsChannel);
     };
-  }, [isLoggedIn, currentUser.id]);
+  }, [isLoggedIn, currentUser?.id]);
 
   function notify(message: string) {
     setToast(message);
@@ -366,14 +368,15 @@ export default function RentifyApp() {
     return filtered;
   }, [availableOnly, category, city, listings, maxPrice, query, userCoords, maxDistance, sortBy]);
 
-  const currentUserListings = listings.filter((listing) => listing.ownerId === currentUser.id);
-  const currentUserBookings = bookings.filter(
+  const currentUserListings = currentUser ? listings.filter((listing) => listing.ownerId === currentUser.id) : [];
+  const currentUserBookings = currentUser ? bookings.filter(
     (booking) => booking.ownerId === currentUser.id || booking.renterId === currentUser.id,
-  );
+  ) : [];
   const unreadCount = notifications.filter((notification) => !notification.read).length;
   const cities = ["All", ...Array.from(new Set(listings.map((listing) => listing.city)))];
 
   function toggleFavorite(listing: Listing) {
+    if (!currentUser) return setAuthMode("login");
     const isFav = favorites.includes(listing.id);
     setFavorites((cur) => isFav ? cur.filter((id) => id !== listing.id) : [...cur, listing.id]);
     if (isLoggedIn) {
@@ -383,6 +386,7 @@ export default function RentifyApp() {
   }
 
   async function addListing(listing: Listing, imageFiles?: File[]) {
+    if (!currentUser) return;
     // Optimistic update
     setListings((cur) => [listing, ...cur]);
     const updated = { ...currentUser, role: "owner" as const, listedItems: currentUser.listedItems + 1 };
@@ -398,6 +402,7 @@ export default function RentifyApp() {
   }
 
   async function requestBooking(listing: Listing, startDate: string, endDate: string, note: string) {
+    if (!currentUser) return;
     const booking: Booking = {
       id: uid("book"),
       listingId: listing.id,
@@ -437,7 +442,7 @@ export default function RentifyApp() {
   }
 
   async function createOrOpenThread(listing: Listing) {
-    if (!isLoggedIn) { setAuthMode("login"); notify("Please log in to contact the owner."); return; }
+    if (!isLoggedIn || !currentUser) { setAuthMode("login"); notify("Please log in to contact the owner."); return; }
     let thread = threads.find(
       (t) => t.listingId === listing.id &&
         ((t.renterId === currentUser.id && t.ownerId === listing.ownerId) ||
@@ -475,7 +480,7 @@ export default function RentifyApp() {
   }
 
   async function sendMessage(threadId: string, body: string) {
-    if (!body.trim()) return;
+    if (!body.trim() || !currentUser) return;
     const msgId = uid("msg");
     const msg = { id: msgId, senderId: currentUser.id, body, createdAt: new Date().toISOString() };
     setThreads((cur) => cur.map((t) => t.id === threadId ? { ...t, messages: [...t.messages, msg] } : t));
@@ -504,6 +509,7 @@ export default function RentifyApp() {
   }
 
   async function addReview(listingId: string, toUserId: string, body: string, rating: number) {
+    if (!currentUser) return;
     const rev = { id: uid("rev"), listingId, fromUserId: currentUser.id, toUserId, body, rating, createdAt: new Date().toISOString() };
     setReviews((cur) => [rev, ...cur]);
     notify("Review posted.");
@@ -672,43 +678,51 @@ export default function RentifyApp() {
         listings={filteredListings}
         favorites={favorites}
         onFavorite={toggleFavorite}
-        onBooking={setBookingListing}
+        onBooking={(listing) => {
+          if (!currentUser) return setAuthMode("login");
+          setBookingListing(listing);
+        }}
         onChat={createOrOpenThread}
         onOpen={setSelectedListing}
         userCoords={userCoords}
       />
 
-      <StartupSections onList={() => setShowListingForm(true)} />
+      <StartupSections onList={() => {
+        if (!currentUser) return setAuthMode("login");
+        setShowListingForm(true);
+      }} />
 
-      <Dashboard
-        tab={dashboardTab}
-        setTab={setDashboardTab}
-        user={currentUser}
-        users={users}
-        listings={listings}
-        myListings={currentUserListings}
-        bookings={currentUserBookings}
-        favorites={favorites}
-        favoriteListings={listings.filter((listing) => favorites.includes(listing.id))}
-        notifications={notifications}
-        threads={threads}
-        reviews={reviews}
-        onList={() => setShowListingForm(true)}
-        onBookingStatus={updateBooking}
-        onChat={(listing) => {
-          setChatListing(listing);
-          setDashboardTab("messages");
-        }}
-        onSendMessage={sendMessage}
-        onReview={addReview}
-        onDeleteListing={deleteListing}
-        onBanUser={banUser}
-        setCurrentUser={setCurrentUser}
-      />
+      {isLoggedIn && currentUser && (
+        <Dashboard
+          tab={dashboardTab}
+          setTab={setDashboardTab}
+          user={currentUser}
+          users={users}
+          listings={listings}
+          myListings={currentUserListings}
+          bookings={currentUserBookings}
+          favorites={favorites}
+          favoriteListings={listings.filter((listing) => favorites.includes(listing.id))}
+          notifications={notifications}
+          threads={threads}
+          reviews={reviews}
+          onList={() => setShowListingForm(true)}
+          onBookingStatus={updateBooking}
+          onChat={(listing) => {
+            setChatListing(listing);
+            setDashboardTab("messages");
+          }}
+          onSendMessage={sendMessage}
+          onReview={addReview}
+          onDeleteListing={deleteListing}
+          onBanUser={banUser}
+          setCurrentUser={setCurrentUser}
+        />
+      )}
 
       <Footer />
 
-      <button className="floating-action" onClick={() => setShowListingForm(true)}>
+      <button className="floating-action" onClick={isLoggedIn ? () => setShowListingForm(true) : () => setAuthMode("login")}>
         <Plus size={18} />
         List an item
       </button>
@@ -723,15 +737,15 @@ export default function RentifyApp() {
           <Search size={20} />
           Browse
         </button>
-        <button className="bottom-nav-btn" onClick={() => setShowListingForm(true)}>
+        <button className="bottom-nav-btn" onClick={isLoggedIn ? () => setShowListingForm(true) : () => setAuthMode("login")}>
           <Plus size={22} />
           List
         </button>
-        <button className="bottom-nav-btn" onClick={() => { setDashboardTab("messages"); document.getElementById("dashboard")?.scrollIntoView({ behavior: "smooth" }); }}>
+        <button className="bottom-nav-btn" onClick={isLoggedIn ? () => { setDashboardTab("messages"); document.getElementById("dashboard")?.scrollIntoView({ behavior: "smooth" }); } : () => setAuthMode("login")}>
           <MessageCircle size={20} />
           Chat
         </button>
-        <button className="bottom-nav-btn" onClick={() => { setDashboardTab("overview"); document.getElementById("dashboard")?.scrollIntoView({ behavior: "smooth" }); }}>
+        <button className="bottom-nav-btn" onClick={isLoggedIn ? () => { setDashboardTab("overview"); document.getElementById("dashboard")?.scrollIntoView({ behavior: "smooth" }); } : () => setAuthMode("login")}>
           <User size={20} />
           Me
         </button>
@@ -748,7 +762,7 @@ export default function RentifyApp() {
             notify={notify}
           />
         )}
-        {showListingForm && (
+        {showListingForm && currentUser && (
           <ListingFormModal
             key="listing-form-modal"
             currentUser={currentUser}
@@ -756,7 +770,7 @@ export default function RentifyApp() {
             onCreate={addListing}
           />
         )}
-        {bookingListing && (
+        {bookingListing && currentUser && (
           <BookingModal
             key={`booking-${bookingListing.id}`}
             listing={bookingListing}
@@ -772,7 +786,10 @@ export default function RentifyApp() {
             reviews={reviews.filter((review) => review.listingId === selectedListing.id)}
             onClose={() => setSelectedListing(null)}
             onFavorite={() => toggleFavorite(selectedListing)}
-            onBooking={() => setBookingListing(selectedListing)}
+            onBooking={() => {
+              if (!currentUser) return setAuthMode("login");
+              setBookingListing(selectedListing);
+            }}
             onChat={() => createOrOpenThread(selectedListing)}
             onReport={(reason) => {
               setListings((current) =>
@@ -784,7 +801,7 @@ export default function RentifyApp() {
             }}
           />
         )}
-        {chatListing && (
+        {chatListing && currentUser && (
           <ChatDrawer
             key={`chat-${chatListing.id}`}
             listing={chatListing}
@@ -841,7 +858,7 @@ function Header({
   onDashboard,
   onAdmin,
 }: {
-  currentUser: UserProfile;
+  currentUser: UserProfile | null;
   unreadCount: number;
   theme: "light" | "dark";
   isLoggedIn: boolean;
@@ -865,8 +882,8 @@ function Header({
           <a href="#browse">Browse</a>
           <a href="#trending">Trending</a>
           <a href="#categories">Categories</a>
-          <button onClick={onDashboard}>Dashboard</button>
-          {currentUser.role === "admin" && <button onClick={onAdmin}>Admin</button>}
+          {isLoggedIn && currentUser && <button onClick={onDashboard}>Dashboard</button>}
+          {currentUser?.role === "admin" && <button onClick={onAdmin}>Admin</button>}
         </nav>
         <div className="flex items-center gap-2">
           <button className="icon-btn relative" onClick={onDashboard} aria-label="Notifications">
@@ -890,7 +907,7 @@ function Header({
             <Plus size={16} />
             List item
           </button>
-          {isLoggedIn && (
+          {isLoggedIn && currentUser && (
             <button className="avatar-chip hidden md:flex" onClick={onDashboard}>
               {currentUser.avatar.startsWith("http") ? (
                 <img src={currentUser.avatar} alt="Avatar" className="w-6 h-6 rounded-full" />
@@ -914,8 +931,8 @@ function Header({
           <a href="#browse" className="text-lg font-bold py-2 border-b border-[var(--border)]" onClick={onMobileMenu}>Browse</a>
           <a href="#trending" className="text-lg font-bold py-2 border-b border-[var(--border)]" onClick={onMobileMenu}>Trending</a>
           <a href="#categories" className="text-lg font-bold py-2 border-b border-[var(--border)]" onClick={onMobileMenu}>Categories</a>
-          <button className="text-lg font-bold py-2 border-b border-[var(--border)] text-left" onClick={onDashboard}>Dashboard</button>
-          {currentUser.role === "admin" && <button className="text-lg font-bold py-2 border-b border-[var(--border)] text-left" onClick={onAdmin}>Admin</button>}
+          {isLoggedIn && currentUser && <button className="text-lg font-bold py-2 border-b border-[var(--border)] text-left" onClick={onDashboard}>Dashboard</button>}
+          {currentUser?.role === "admin" && <button className="text-lg font-bold py-2 border-b border-[var(--border)] text-left" onClick={onAdmin}>Admin</button>}
           <div className="mt-auto flex flex-col gap-3">
             {isLoggedIn ? (
               <button className="btn-secondary h-12 w-full justify-center" onClick={onSignOut}>Sign out</button>
@@ -1708,15 +1725,6 @@ function ProfilePanel({
             <span className="mini-chip">{draft.rating} rating</span>
             <span className="mini-chip">Verified badge</span>
           </div>
-          <div className="mt-5 text-xs font-bold uppercase tracking-[0.18em] text-[var(--muted)]">Switch demo profile</div>
-          <div className="mt-3 grid gap-2">
-            {users.map((profile) => (
-              <button key={profile.id} className="dash-tab" onClick={() => setCurrentUser(profile)}>
-                <span className="avatar-mini">{profile.avatar}</span>
-                {profile.name}
-              </button>
-            ))}
-          </div>
         </div>
         <form
           className="grid gap-4 rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-5"
@@ -1807,7 +1815,7 @@ function AuthModal({
   mode: AuthMode;
   onMode: (mode: AuthMode) => void;
   onClose: () => void;
-  setCurrentUser: (user: UserProfile) => void;
+  setCurrentUser: (user: UserProfile | null) => void;
   notify: (message: string) => void;
 }) {
   const [busy, setBusy] = useState(false);
