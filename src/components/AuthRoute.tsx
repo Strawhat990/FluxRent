@@ -18,13 +18,15 @@ export default function AuthRoute({ mode }: { mode: Mode }) {
     const email = String(data.get("email") ?? "");
     const password = String(data.get("password") ?? "");
     const name = String(data.get("name") ?? "Leasify User");
+    const city = String(data.get("city") ?? "");
+    const phone = String(data.get("phone") ?? "");
 
     try {
       if (mode === "forgot") {
         await resetPassword(email);
         setMessage("Password reset flow started.");
       } else if (mode === "signup") {
-        await signUpWithEmail(email, password, name);
+        await signUpWithEmail(email, password, name, city, phone);
         setMessage("Account created. You can now continue into Leasify.");
       } else {
         await signInWithEmail(email, password);
@@ -40,7 +42,7 @@ export default function AuthRoute({ mode }: { mode: Mode }) {
   return (
     <main className="grid min-h-screen place-items-center bg-[var(--bg)] p-4 text-[var(--text)]">
       <form className="glass-panel w-full max-w-md p-6" onSubmit={submit}>
-        <Link className="brand" href="/">Rent<span>ify</span></Link>
+        <Link className="brand" href="/">Leas<span>ify</span></Link>
         <h1 className="mt-6 text-3xl font-black">
           {mode === "login" ? "Log in" : mode === "signup" ? "Sign up" : "Forgot password"}
         </h1>
@@ -48,10 +50,13 @@ export default function AuthRoute({ mode }: { mode: Mode }) {
           Sign in or create an account to start renting items and messaging owners.
         </p>
         {mode === "signup" && (
-          <label className="label mt-5">
-            Name
-            <input className="input" name="name" required />
-          </label>
+          <>
+            <label className="label mt-5">Name<input className="input" name="name" required /></label>
+            <div className="grid grid-cols-2 gap-3 mt-4">
+              <label className="label">City<input className="input" name="city" required /></label>
+              <label className="label">Phone<input className="input" name="phone" type="tel" required /></label>
+            </div>
+          </>
         )}
         <label className="label mt-4">
           Email

@@ -1828,13 +1828,15 @@ function AuthModal({
     const email = String(data.get("email") ?? "");
     const password = String(data.get("password") ?? "");
     const name = String(data.get("name") ?? "Leasify User");
+    const city = String(data.get("city") ?? "");
+    const phone = String(data.get("phone") ?? "");
 
     try {
       if (mode === "forgot") {
         await resetPassword(email);
         notify(isSupabaseConfigured() ? "Password reset email sent." : "Demo mode: reset flow simulated.");
       } else if (mode === "signup") {
-        await signUpWithEmail(email, password, name);
+        await signUpWithEmail(email, password, name, city, phone);
         notify(isSupabaseConfigured() ? "Account created! Check your email to confirm." : "Demo account created locally.");
       } else {
         await signInWithEmail(email, password);
@@ -1862,9 +1864,17 @@ function AuthModal({
             Sign in to list items, contact owners, and track your rentals.
           </p>
         </div>
-        {mode === "signup" && <label className="label">Name<input className="input" name="name" required /></label>}
-        <label className="label">Email<input className="input" name="email" type="email" placeholder="you@example.com" required /></label>
-        {mode !== "forgot" && <label className="label">Password<input className="input" name="password" type="password" placeholder="Min 6 characters" required /></label>}
+        {mode === "signup" && (
+          <>
+            <label className="label">Name<input className="input" name="name" required /></label>
+            <div className="grid grid-cols-2 gap-3 mt-3">
+              <label className="label">City<input className="input" name="city" required /></label>
+              <label className="label">Phone<input className="input" name="phone" type="tel" required /></label>
+            </div>
+          </>
+        )}
+        <label className="label mt-3">Email<input className="input" name="email" type="email" placeholder="you@example.com" required /></label>
+        {mode !== "forgot" && <label className="label mt-3">Password<input className="input" name="password" type="password" placeholder="Min 6 characters" required /></label>}
         {error && <div className="rounded-xl bg-red-500/10 p-3 text-sm font-bold text-red-600">{error}</div>}
         <button className="btn-primary h-12 w-full" disabled={busy} type="submit">
           {busy ? "Working..." : mode === "login" ? "Log in" : mode === "signup" ? "Sign up" : "Send reset email"}

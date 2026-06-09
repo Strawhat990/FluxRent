@@ -30,10 +30,10 @@ export async function signInWithEmail(email: string, password: string) {
   return data;
 }
 
-export async function signUpWithEmail(email: string, password: string, name: string) {
+export async function signUpWithEmail(email: string, password: string, name: string, city: string, phone: string) {
   const sb = getSupabaseBrowserClient();
   if (!sb) return { demo: true };
-  const { data, error } = await sb.auth.signUp({ email, password, options: { data: { name } } });
+  const { data, error } = await sb.auth.signUp({ email, password, options: { data: { name, city, phone } } });
   if (error) throw error;
   return data;
 }
@@ -85,7 +85,7 @@ function toListing(r: any): Listing {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function toProfile(r: any): UserProfile {
   return {
-    id: r.id, name: r.name, email: r.email, city: r.city, bio: r.bio, avatar: r.avatar,
+    id: r.id, name: r.name, email: r.email, city: r.city, phone: r.phone ?? "", bio: r.bio, avatar: r.avatar,
     rating: Number(r.rating), reviewCount: r.review_count, verified: r.verified,
     role: r.role, listedItems: r.listed_items, rentalHistory: r.rental_history, banned: r.banned,
   };
@@ -201,6 +201,7 @@ export async function createProfile(profile: Partial<UserProfile> & { id: string
     name: profile.name,
     email: profile.email,
     city: profile.city ?? "",
+    phone: profile.phone ?? "",
     bio: profile.bio ?? "",
     avatar: profile.avatar ?? `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.email}`,
     rating: profile.rating ?? 0,
@@ -225,6 +226,7 @@ export async function updateProfile(userId: string, updates: Partial<UserProfile
   const row: Record<string, unknown> = {};
   if (updates.name !== undefined) row.name = updates.name;
   if (updates.city !== undefined) row.city = updates.city;
+  if (updates.phone !== undefined) row.phone = updates.phone;
   if (updates.bio !== undefined) row.bio = updates.bio;
   if (updates.avatar !== undefined) row.avatar = updates.avatar;
   if (updates.role !== undefined) row.role = updates.role;
