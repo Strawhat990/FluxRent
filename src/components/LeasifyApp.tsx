@@ -142,13 +142,13 @@ export default function LeasifyApp() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [users, setUsers] = useState<UserProfile[]>([]);
-  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [currentUser, setCurrentUser] = usePersistedState<UserProfile | null>("leasify-current-user", null);
+  const [isLoggedIn, setIsLoggedIn] = usePersistedState("leasify-logged-in", false);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("All");
   const [city, setCity] = useState("All");
-  const [maxPrice, setMaxPrice] = useState(3000);
+  const [maxPrice, setMaxPrice] = useState(3100);
   const [availableOnly, setAvailableOnly] = useState(false);
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [maxDistance, setMaxDistance] = useState<number | null>(null);
@@ -332,7 +332,7 @@ export default function LeasifyApp() {
           .includes(text);
       const matchesCategory = category === "All" || listing.category === category;
       const matchesCity = city === "All" || listing.city === city;
-      const matchesPrice = listing.pricePerDay <= maxPrice;
+      const matchesPrice = maxPrice === 3100 || listing.pricePerDay <= maxPrice;
       const matchesAvailability = !availableOnly || listing.availability === "available";
 
       let matchesDistance = true;
@@ -576,13 +576,13 @@ export default function LeasifyApp() {
             <div>
               <div className="mb-2 flex items-center justify-between text-xs font-bold uppercase tracking-[0.18em] text-[var(--muted)]">
                 <span>Max price per day</span>
-                <span>{formatInr(maxPrice)}</span>
+                <span>{maxPrice === 3100 ? "Unlimited" : formatInr(maxPrice)}</span>
               </div>
               <input
                 aria-label="Max price"
                 className="range-input"
                 min={200}
-                max={3000}
+                max={3100}
                 step={100}
                 type="range"
                 value={maxPrice}
