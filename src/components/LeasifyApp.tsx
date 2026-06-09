@@ -2429,10 +2429,10 @@ function Toast({ message }: { message: string }) {
 
 function Footer() {
   return (
-    <footer className="relative z-10 bg-dark px-4 py-8 sm:py-12 text-bg md:px-8 pb-[calc(5rem+env(safe-area-inset-bottom,0px))] md:pb-12">
+    <footer className="relative z-10 bg-[#111009] px-4 py-8 sm:py-12 text-white md:px-8 pb-[calc(5rem+env(safe-area-inset-bottom,0px))] md:pb-12">
       <div className="mx-auto grid max-w-7xl gap-6 sm:gap-8 grid-cols-2 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
         <div className="col-span-2 md:col-span-1">
-          <div className="brand text-[var(--bg)]">Leas<span>ify</span></div>
+          <div className="brand text-white">Leas<span className="text-[var(--accent)]">ify</span></div>
           <p className="mt-3 sm:mt-4 max-w-sm text-xs sm:text-sm leading-6 sm:leading-7 text-white/45">
             A polished, Supabase-ready rental marketplace MVP with auth, profiles, listings, chat, bookings, saved items,
             reviews, notifications, and admin moderation.
@@ -2440,12 +2440,12 @@ function Footer() {
         </div>
         {["Renters", "Owners", "Company"].map((group) => (
           <div key={group}>
-            <h4 className="font-black">{group}</h4>
+            <h4 className="font-black text-white">{group}</h4>
             <div className="mt-4 grid gap-3 text-sm text-white/45">
-              <a>Browse rentals</a>
-              <a>Safety</a>
-              <a>Dashboard</a>
-              <a>Support</a>
+              <a className="hover:text-white transition-colors">Browse rentals</a>
+              <a className="hover:text-white transition-colors">Safety</a>
+              <a className="hover:text-white transition-colors">Dashboard</a>
+              <a className="hover:text-white transition-colors">Support</a>
             </div>
           </div>
         ))}
