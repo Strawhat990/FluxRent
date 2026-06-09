@@ -1098,7 +1098,7 @@ textarea.input {
 
   /* Featured listing text sizing */
   .featured-listing .text-3xl,
-  .featured-listing .md\\:text-5xl {
+  .featured-listing .md\:text-5xl {
     font-size: 1.75rem;
   }
 
@@ -1190,12 +1190,11 @@ textarea.input {
     max-width: 75%;
   }
 
-  /* "For owners" section */
   .section-pad .text-4xl {
     font-size: 2.2rem;
   }
 
-  .section-pad .md\\:text-6xl {
+  .section-pad .md\:text-6xl {
     font-size: 2.8rem;
   }
 }
