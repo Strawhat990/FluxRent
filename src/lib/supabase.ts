@@ -192,11 +192,11 @@ export async function fetchProfile(userId: string): Promise<UserProfile | null> 
   return toProfile(data);
 }
 
-export async function createProfile(profile: Partial<UserProfile> & { id: string, name: string, email: string }): Promise<void> {
+export async function createProfile(profile: Partial<UserProfile> & { id: string, name: string, email: string }): Promise<UserProfile | null> {
   const sb = getSupabaseBrowserClient();
-  if (!sb) return;
+  if (!sb) return null;
   
-  const { error } = await sb.from("profiles").insert({
+  const { data, error } = await sb.from("profiles").insert({
     id: profile.id,
     name: profile.name,
     email: profile.email,
@@ -210,9 +210,13 @@ export async function createProfile(profile: Partial<UserProfile> & { id: string
     listed_items: profile.listedItems ?? 0,
     rental_history: profile.rentalHistory ?? 0,
     banned: profile.banned ?? false,
-  });
+  }).select("*").single();
 
-  if (error) console.error("createProfile:", error);
+  if (error) {
+    console.error("createProfile:", error);
+    return null;
+  }
+  return toProfile(data);
 }
 
 export async function updateProfile(userId: string, updates: Partial<UserProfile>): Promise<void> {

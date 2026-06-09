@@ -222,8 +222,7 @@ export default function RentifyApp() {
             avatar: (session.user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${session.user.email}`) as string,
             role: "user" as any,
           };
-          await createProfile(newProfile);
-          profile = await fetchProfile(userId);
+          profile = await createProfile(newProfile);
         }
         if (profile) { setCurrentUser(profile); setIsLoggedIn(true); }
         const [favs, myBookings, myThreads, myNotifs] = await Promise.all([
