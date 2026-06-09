@@ -13,6 +13,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000"),
   title: "Leasify - Rent Anything. From Anyone.",
   description:
     "Rent anything from anyone around you, or earn from what you own. Cameras, cars, dresses, tools, speakers and more.",
@@ -23,11 +24,20 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_IN",
     siteName: "Leasify",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Leasify - Rent Anything. From Anyone.",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Leasify - Rent Anything. From Anyone.",
     description: "India's premier peer-to-peer rental marketplace.",
+    images: ["/og-image.png"],
   },
 };
 
