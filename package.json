@@ -13,6 +13,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@21st-sdk/agent": "^0.0.18",
     "@supabase/supabase-js": "^2.106.2",
     "@types/leaflet": "^1.9.21",
     "@vercel/analytics": "^2.0.1",
@@ -25,7 +26,8 @@
     "react-dom": "^19.2.6",
     "react-leaflet": "^5.0.0",
     "resend": "^6.12.4",
-    "tailwind-merge": "^3.6.0"
+    "tailwind-merge": "^3.6.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.0",
@@ -38,5 +40,13 @@
     "postcss": "^8.5.15",
     "tailwindcss": "^4.3.0",
     "typescript": "^6.0.3"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Strawhat990/FluxRent.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Strawhat990/FluxRent/issues"
+  },
+  "homepage": "https://github.com/Strawhat990/FluxRent#readme"
 }

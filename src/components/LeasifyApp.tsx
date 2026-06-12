@@ -90,6 +90,8 @@ const MapDisplay = dynamic(() => import("./MapDisplay"), {
     </div>
   ),
 });
+
+
 import type {
   Booking,
   BookingStatus,
@@ -536,6 +538,7 @@ export default function LeasifyApp() {
       <SplashScreen />
       <CursorGlow />
       <AnimatedBackdrop />
+
       <Header
         currentUser={currentUser}
         unreadCount={unreadCount}
@@ -841,6 +844,7 @@ function AnimatedBackdrop() {
       <div className="orb left-[4%] top-[18%] bg-orange-500/14" />
       <div className="orb right-[-8%] top-[8%] h-[460px] w-[460px] bg-amber-400/16 [animation-delay:1.2s]" />
       <div className="orb bottom-[-12%] left-[32%] h-[360px] w-[360px] bg-blue-600/10 [animation-delay:2.4s]" />
+      <div className="orb right-[15%] bottom-[5%] h-[380px] w-[380px] bg-pink-500/8 [animation-delay:3.6s]" />
     </div>
   );
 }
@@ -979,12 +983,43 @@ function Hero({ onBrowse, onList, onSearch }: { onBrowse: () => void; onList: ()
             1,200+ verified rentals across India
           </motion.div>
           <motion.h1 variants={item} className="hero-title">
-            Rent <span>anything.</span>
+            Rent <span className="gradient-accent">anything.</span>
             <br />
             From anyone.
             <br />
             Near you.
           </motion.h1>
+
+          {/* Premium floating particles */}
+          <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden hidden lg:block">
+            {[...Array(6)].map((_, i) => (
+              <motion.div
+                key={`particle-${i}`}
+                className="absolute rounded-full"
+                style={{
+                  width: 4 + Math.random() * 4,
+                  height: 4 + Math.random() * 4,
+                  left: `${15 + i * 14}%`,
+                  top: `${20 + (i % 3) * 25}%`,
+                  background: i % 2 === 0 ? 'var(--accent)' : 'var(--accent2)',
+                  opacity: 0.25,
+                }}
+                animate={{
+                  y: [0, -20 - i * 5, 0],
+                  x: [0, (i % 2 === 0 ? 8 : -8), 0],
+                  opacity: [0.15, 0.35, 0.15],
+                  scale: [1, 1.3, 1],
+                }}
+                transition={{
+                  duration: 4 + i * 0.8,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: i * 0.5,
+                }}
+              />
+            ))}
+          </div>
+
           <motion.p variants={item} className="hero-copy">
             A premium peer-to-peer marketplace for cameras, cars, fashion, tools, gaming gear, event kits, and the
             useful things hiding in your neighborhood.
@@ -1355,7 +1390,7 @@ function StartupSections({ onList, listings = [] }: { onList: () => void, listin
         </div>
       </section>
 
-      <section className="grid grid-cols-2 bg-orange-600 text-white md:grid-cols-4">
+      <section className="grid grid-cols-2 stats-gradient text-white md:grid-cols-4">
         {stats.map(([value, label]) => (
           <div key={label} className="border-b border-white/15 p-5 sm:p-8 text-center md:border-r">
             <div className="text-2xl sm:text-4xl font-black">{value}</div>
@@ -2353,6 +2388,14 @@ function SectionHeader({ eyebrow, title, action, inverse = false }: { eyebrow: s
       <div>
         <div className="section-eyebrow">{eyebrow}</div>
         <h2 className={cn("mt-2 max-w-3xl text-3xl sm:text-4xl font-black md:text-5xl", inverse && "text-bg")}>{title}</h2>
+        <motion.div
+          className="mt-3 h-[3px] rounded-full"
+          style={{ background: 'linear-gradient(90deg, var(--accent), var(--accent2), transparent)' }}
+          initial={{ width: 0 }}
+          whileInView={{ width: 48 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        />
       </div>
       {action && <div className={cn("text-xs sm:text-sm font-bold", inverse ? "text-bg opacity-45" : "text-muted")}>{action}</div>}
     </div>
@@ -2431,6 +2474,7 @@ function Toast({ message }: { message: string }) {
 function Footer() {
   return (
     <footer className="relative z-10 bg-[#111009] px-4 py-8 sm:py-12 text-white md:px-8 pb-[calc(5rem+env(safe-area-inset-bottom,0px))] md:pb-12">
+      <div className="section-divider mb-8 sm:mb-12" />
       <div className="mx-auto grid max-w-7xl gap-6 sm:gap-8 grid-cols-2 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
         <div className="col-span-2 md:col-span-1">
           <div className="brand text-white">Leas<span className="text-[var(--accent)]">ify</span></div>
@@ -2479,6 +2523,10 @@ function SplashScreen() {
       animate={{ y: "-100vh", opacity: 0 }}
       transition={{ delay: 2.2, duration: 0.8, ease: [0.76, 0, 0.24, 1] }}
     >
+      {/* Radial glow */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div className="h-[300px] w-[300px] sm:h-[400px] sm:w-[400px] rounded-full bg-[var(--accent)] opacity-[0.07] blur-[100px]" />
+      </div>
       <div className="flex items-end font-black text-6xl sm:text-8xl tracking-tight">
         <div className="overflow-hidden pb-2 sm:pb-3">
           <motion.div
